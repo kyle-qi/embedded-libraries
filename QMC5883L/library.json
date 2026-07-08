@@ -1,0 +1,22 @@
+{
+    "name": "QMC5883L",
+    "version": "1.0.0",
+    "description": "QMC5883L 3-axis magnetometer driver with configuration, calibration, and azimuth helpers",
+    "keywords": [
+        "QMC5883L",
+        "magnetometer",
+        "compass",
+        "I2C"
+    ],
+    "frameworks": [
+        "arduino"
+    ],
+    "platforms": [
+        "*"
+    ],
+    "dependencies": [
+        {
+            "name": "i2c_handler"
+        }
+    ]
+}

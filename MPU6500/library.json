@@ -1,0 +1,23 @@
+{
+    "name": "MPU6500",
+    "version": "1.0.0",
+    "description": "MPU6500 6-axis accelerometer and gyroscope driver with configuration and scaled readings",
+    "keywords": [
+        "MPU6500",
+        "accelerometer",
+        "gyroscope",
+        "IMU",
+        "I2C"
+    ],
+    "frameworks": [
+        "arduino"
+    ],
+    "platforms": [
+        "*"
+    ],
+    "dependencies": [
+        {
+            "name": "i2c_handler"
+        }
+    ]
+}

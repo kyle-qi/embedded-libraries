@@ -1,0 +1,19 @@
+{
+    "name": "Neo6M",
+    "version": "1.0.0",
+    "description": "u-blox NEO-6M GPS receiver driver that parses NMEA GPGGA sentences over UART",
+    "keywords": [
+        "Neo6M",
+        "NEO-6M",
+        "GPS",
+        "GNSS",
+        "NMEA",
+        "UART"
+    ],
+    "frameworks": [
+        "arduino"
+    ],
+    "platforms": [
+        "*"
+    ]
+}

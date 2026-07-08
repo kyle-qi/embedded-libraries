@@ -1,0 +1,17 @@
+{
+    "name": "i2c_handler",
+    "version": "1.0.0",
+    "description": "Lightweight Arduino I2C helper functions and bit-field utilities for register-based device drivers",
+    "keywords": [
+        "i2c",
+        "wire",
+        "register",
+        "bitfield"
+    ],
+    "frameworks": [
+        "arduino"
+    ],
+    "platforms": [
+        "*"
+    ]
+}
