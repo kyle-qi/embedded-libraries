@@ -6,20 +6,6 @@ abstractions, and utilities for PlatformIO projects.
 Each library is self-contained and follows the PlatformIO library layout, so it
 can be imported independently by any project without copying source code.
 
-> **Note on location:** This folder currently lives inside the `beer-compass-v0`
-> project because of local tooling constraints. The intended final layout is a
-> standalone repository that sits _beside_ your project repos:
->
-> ```
-> Projects/
-> ├── embedded-libraries/
-> ├── beer-compass-v0/
-> └── ...
-> ```
->
-> Once relocated, update the consuming project's `lib_extra_dirs` entries from
-> `embedded-libraries/...` to `../embedded-libraries/...`.
-
 ## Structure
 
 ```
