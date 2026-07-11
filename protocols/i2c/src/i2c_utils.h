@@ -34,6 +34,22 @@ inline bool writeMasked(II2C& bus, uint8_t addr, uint8_t reg, uint8_t data, uint
     return bus.write(addr, reg, updated);
 }
 
+/**
+ * @brief Write a single bit in a register.
+ *
+ * @param bus    I2C bus implementation.
+ * @param addr   7-bit I2C device address.
+ * @param reg    Target register address.
+ * @param bit    Value to write (true = 1, false = 0).
+ * @param bitPos Bit position [0-7].
+ * @return true on success, false otherwise.
+ */
+inline bool writeBit(II2C& bus, uint8_t addr, uint8_t reg, bool bit, uint8_t bitPos) {
+    return writeMasked(bus, addr, reg,
+        static_cast<uint8_t>(bit) << bitPos,
+        static_cast<uint8_t>(1u << bitPos));
+}
+
 } // namespace i2c
 
 #endif
