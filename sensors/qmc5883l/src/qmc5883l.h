@@ -1,5 +1,4 @@
-#ifndef QMC5883L_H
-#define QMC5883L_H
+#pragma once
 
 #include "qmc5883l_defs.h"
 #include "i2c.h"
@@ -332,4 +331,3 @@ class QMC5883L{
     float normalize(int16_t val, int16_t maxVal, int16_t minVal);
 };
 
-#endif

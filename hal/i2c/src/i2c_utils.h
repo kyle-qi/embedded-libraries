@@ -1,5 +1,4 @@
-#ifndef I2C_UTILS_H
-#define I2C_UTILS_H
+#pragma once
 
 #include "i2c.h"
 
@@ -52,4 +51,3 @@ inline bool writeBit(II2C& bus, uint8_t addr, uint8_t reg, bool bit, uint8_t bit
 
 } // namespace i2c
 
-#endif

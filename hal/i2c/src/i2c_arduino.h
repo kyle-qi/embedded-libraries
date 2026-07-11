@@ -1,5 +1,4 @@
-#ifndef ARDUINO_I2C_H
-#define ARDUINO_I2C_H
+#pragma once
 
 #include "i2c.h"
 #include <Wire.h>
@@ -73,4 +72,3 @@ public:
     }
 };
 
-#endif

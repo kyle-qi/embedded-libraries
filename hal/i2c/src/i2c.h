@@ -1,5 +1,4 @@
-#ifndef I2C_H
-#define I2C_H
+#pragma once
 
 #include <stdint.h>
 
@@ -66,4 +65,3 @@ public:
     virtual bool readBytes(uint8_t addr, uint8_t reg, uint8_t* buf, uint8_t len) = 0;
 };
 
-#endif

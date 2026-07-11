@@ -1,5 +1,4 @@
-#ifndef NEO6M_H
-#define NEO6M_H
+#pragma once
 
 #include <Arduino.h>
 
@@ -163,4 +162,3 @@ class Neo6M {
     char lastSentence[NEO6M_BUFFER_SIZE];
 };
 
-#endif

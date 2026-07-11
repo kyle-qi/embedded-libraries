@@ -1,5 +1,4 @@
-#ifndef QMC5883L_DEFS_H
-#define QMC5883L_DEFS_H
+#pragma once
 
 /**
  * @file qmc5883l_defs.h
@@ -63,6 +62,4 @@
 
 #ifndef RAD_TO_DEG
 #define RAD_TO_DEG 57.295779513082320876798154814105
-#endif
-
 #endif

@@ -1,5 +1,4 @@
-#ifndef MPU6500_DEFS_H
-#define MPU6500_DEFS_H
+#pragma once
 
 /**
  * @file mpu6500_defs.h
@@ -391,5 +390,3 @@
 #define MPU6500_SENSOR_ENABLE  true
 #define MPU6500_SENSOR_DISABLE false
 /// @}
-
-#endif
