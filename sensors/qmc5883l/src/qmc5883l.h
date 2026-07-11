@@ -2,6 +2,7 @@
 
 #include "qmc5883l_defs.h"
 #include "i2c.h"
+#include "clock.h"
 
 class QMC5883L{
     public:
@@ -10,18 +11,19 @@ class QMC5883L{
      * @brief Class constructor.
      *
      * @param bus       Reference to the platform I2C implementation.
+     * @param clock     Reference to the platform clock implementation.
      * @param myAddress The I2C address of the device (default @ref QMC5883L_I2C_ADDR_PIN_LOW).
      */
-    explicit QMC5883L(II2C& bus, uint8_t myAddress = QMC5883L_I2C_ADDR_PIN_LOW);
+    explicit QMC5883L(II2C& bus, IClock& clock, uint8_t myAddress = QMC5883L_I2C_ADDR_PIN_LOW);
 
     /**
-     * @brief typedef defining the modes for the setMode function
+     * @brief Operating mode of the magnetometer.
      */
-    enum Mode : uint8_t {
-        MODE_SUSPEND = 0,
-        MODE_NORMAL = 1,
-        MODE_SINGLE = 2, 
-        MODE_CONTINUOUS = 3
+    enum class Mode : uint8_t {
+        Suspend    = 0,
+        Normal     = 1,
+        Single     = 2,
+        Continuous = 3,
     };
 
     /**
@@ -33,44 +35,86 @@ class QMC5883L{
     bool setMode(Mode mode);
 
     /**
+     * @brief Output data rate of the magnetometer.
+     */
+    enum class OutputRate : uint8_t {
+        Hz10  = 0,
+        Hz50  = 1,
+        Hz100 = 2,
+        Hz200 = 3,
+    };
+
+    /**
      * @brief Sets the magnetometer's data output frequency.
      * 
-     * @param odr Output data rate in Hz. Use @c QMC5883L_OUTPUT_ODR_* macros. Default: @ref QMC5883L_OUTPUT_ODR_10_HZ.
+     * @param odr Desired output data rate. Default: @ref OutputRate::Hz10.
      * @return true if the configuration is successful, false otherwise.
      */
-    bool setOutputRate(uint8_t odr = QMC5883L_OUTPUT_ODR_10_HZ);
+    bool setOutputRate(OutputRate odr = OutputRate::Hz10);
 
     /**
-     * @brief Sets the magnetometer's over sample rate ratio
-     * 
-     * @param osr1 Over sample rate ratio. Use @c QMC5883L_OVERSAMPLE_RATE_* macros. Default: @ref QMC5883L_OVERSAMPLE_RATE_2.
-     * @return true if the configuration is successful, false otherwise.
+     * @brief Over-sample rate ratio of the magnetometer.
      */
-    bool setOverSampleRate(uint8_t osr1 = QMC5883L_OVERSAMPLE_RATE_2);
-    
-    /**
-     * @brief Sets the magnetometer's down sample rate ratio.
-     * 
-     * @param osr2 Down sample rate ratio. Use @c QMC5883L_DOWNSAMPLE_RATE_* macros. Default: @ref QMC5883L_DOWNSAMPLE_RATE_4.
-     * @return true if the configuration is successful, false otherwise.
-     */
-    bool setDownSampleRate(uint8_t osr2 = QMC5883L_DOWNSAMPLE_RATE_4);
+    enum class OverSampleRate : uint8_t {
+        x8 = 0,
+        x4 = 1,
+        x2 = 2,
+        x1 = 3,
+    };
 
     /**
-     * @brief Sets the magnetometer's magnetic range.
+     * @brief Sets the magnetometer's over-sample rate ratio.
      * 
-     * @param rng Magnetic range in Gauss. Use @c QMC5883L_RANGE_*_GAUSS macros. Default: @ref QMC5883L_RANGE_2_GAUSS.
+     * @param osr Desired over-sample ratio. Default: @ref OverSampleRate::x2.
      * @return true if the configuration is successful, false otherwise.
      */
-    bool setRange(uint8_t range = QMC5883L_RANGE_2_GAUSS);
+    bool setOverSampleRate(OverSampleRate osr = OverSampleRate::x2);
 
     /**
-     * @brief typedef defining the modes for the setResetMode function
+     * @brief Down-sample rate ratio of the magnetometer.
      */
-    enum SetResetMode : uint8_t {
-        SET_RESET_ON = 0,
-        SET_ON = 1,
-        SET_RESET_OFF = 2,
+    enum class DownSampleRate : uint8_t {
+        x1 = 0,
+        x2 = 1,
+        x4 = 2,
+        x8 = 3,
+    };
+
+    /**
+     * @brief Sets the magnetometer's down-sample rate ratio.
+     * 
+     * @param osr Desired down-sample ratio. Default: @ref DownSampleRate::x4.
+     * @return true if the configuration is successful, false otherwise.
+     */
+    bool setDownSampleRate(DownSampleRate osr = DownSampleRate::x4);
+
+    /**
+     * @brief Full-scale magnetic range of the magnetometer.
+     */
+    enum class Range : uint8_t {
+        Gauss30 = 0,
+        Gauss12 = 1,
+        Gauss8  = 2,
+        Gauss2  = 3,
+    };
+
+    /**
+     * @brief Sets the magnetometer's full-scale magnetic range.
+     * 
+     * Also updates the internal LSB-to-Gauss scale factor.
+     *
+     * @param range Desired range. Default: @ref Range::Gauss2.
+     * @return true if the configuration is successful, false otherwise.
+     */
+    bool setRange(Range range = Range::Gauss2);
+
+    /**
+     * @brief Set/reset mode of the magnetometer.
+     */
+    enum class SetResetMode : uint8_t {
+        SetAndReset = 0,
+        SetOnly     = 1,
+        Off         = 2,
     };
 
     /**
@@ -89,12 +133,10 @@ class QMC5883L{
     bool resetRegisters();
 
     /**
-     * @brief Continuous heading profile: reset, continuous mode, ODR/oversample/downsample/range from library macros.
+     * @brief Continuous heading profile: reset, continuous mode, 10 Hz ODR,
+     *        oversample x8, downsample x8, 8 Gauss range, set-only mode.
      *
-     * Uses @ref QMC5883L_OUTPUT_ODR_10_HZ, @ref QMC5883L_OVERSAMPLE_RATE_8, @ref QMC5883L_DOWNSAMPLE_RATE_8,
-     * @ref QMC5883L_RANGE_8_GAUSS, and SetResetMode @c SET_ON.
-     *
-     * @return true if every step succeeded.
+     * @return true if every step succeeded, false on the first failure.
      */
     bool configureDefaults();
 
@@ -114,8 +156,12 @@ class QMC5883L{
 
     /** 
      * @brief Determines and stores the maximum and minimum readings in the X, Y, and Z directions.
+     *
+     * Blocks until no new extremes have been observed for @p calibrationTime milliseconds.
+     * Relies on the injected IClock for timing and delays.
      * 
-     * @param calibrationTime Duration of no-change before ending calibration in ms (default @ref QMC5883L_CALIBRATION_IDLE_MS_DEFAULT).
+     * @param calibrationTime Duration of no-change before ending calibration in ms
+     *                        (default @ref QMC5883L_CALIBRATION_IDLE_MS_DEFAULT).
      */
     void calibrate(uint32_t calibrationTime = QMC5883L_CALIBRATION_IDLE_MS_DEFAULT);
 
@@ -131,139 +177,100 @@ class QMC5883L{
      */
     void setCalibrationData(int16_t xMax, int16_t yMax, int16_t zMax, int16_t xMin, int16_t yMin, int16_t zMin);
 
-    /** 
-     * @brief Reads the magnetometer's X register.
-     * 
-     * @return The magnetometer's raw X axis reading.
-     */
-    int16_t readX();
-
-    /** 
-     * @brief Reads the magnetometer's Y register.
-     * 
-     * @return The magnetometer's raw Y axis reading.
-     */
-    int16_t readY();
-
     /**
-    * @brief Reads the magnetometer's Z register.
-    * 
-    * @return The magnetometer's raw Z axis reading.
-    */
-    int16_t readZ();
-
-    /**
-     * @brief Reads the magnetometer's 3 axis.
+     * @brief Reads all three magnetometer axes and updates internal state.
+     *
+     * @return true if the I2C read succeeded for all axes, false otherwise.
+     *         On failure the previously stored values are unchanged.
      */
-    void read();
-
-    /**
-     * @brief Obtains the most recent magnetometer raw x reading.
-     * 
-     * @return The most recent raw x reading.
-     */
-    int16_t getXRaw(){return this->xRaw;}
-
-    /**
-     * @brief Obtains the most recent magnetometer raw y reading.
-     * 
-     * @return The most recent raw y reading.
-     */
-    int16_t getYRaw(){return this->yRaw;}
-
-    /**
-     * @brief Obtains the most recent magnetometer raw z reading.
-     * 
-     * @return The most recent raw z reading.
-     */
-    int16_t getZRaw(){return this->zRaw;}
+    bool read();
 
     /**
      * @brief Obtains the most recent magnetometer normalized x reading.
      * 
-     * @return The most recent normalized x reading.
+     * @return The most recent normalized x reading in [-1, 1].
      */
-    float getX(){return this->x;}
+    float getX() const { return this->x; }
 
     /**
      * @brief Obtains the most recent magnetometer normalized y reading.
      * 
-     * @return The most recent normalized y reading.
+     * @return The most recent normalized y reading in [-1, 1].
      */
-    float getY(){return this->y;}
+    float getY() const { return this->y; }
 
     /**
      * @brief Obtains the most recent magnetometer normalized z reading.
      * 
-     * @return The most recent normalized z reading.
+     * @return The most recent normalized z reading in [-1, 1].
      */
-    float getZ(){return this->z;}
+    float getZ() const { return this->z; }
 
     /**
      * @brief Obtains the most recent magnetometer x reading in Gauss.
      */
-    float getXGauss(){return this->xGauss;}
+    float getXGauss() const { return this->xGauss; }
 
     /**
      * @brief Obtains the most recent magnetometer y reading in Gauss.
      */
-    float getYGauss(){return this->yGauss;}
+    float getYGauss() const { return this->yGauss; }
 
     /**
      * @brief Obtains the most recent magnetometer z reading in Gauss.
      */
-    float getZGauss(){return this->zGauss;}
+    float getZGauss() const { return this->zGauss; }
 
     /**
-     * @brief Calculates the azimuth/heading of the compass.
+     * @brief Calculates the azimuth/heading from normalized X and Y readings.
      * 
-     * @param xNorm The normalized X reading of the magnetometer [-1,1].
-     * @param yNorm The normalized Y reading of the magnetometer [-1,1].
-     * @return The magnetometer azimuth/heading in degrees.
+     * @param xNorm The normalized X reading of the magnetometer [-1, 1].
+     * @param yNorm The normalized Y reading of the magnetometer [-1, 1].
+     * @return The azimuth/heading in degrees [0, 360).
      */
-    float azimuth(float xNorm, float yNorm);
+    float azimuth(float xNorm, float yNorm) const;
 
     /**
      * @brief Obtain the magnetometer's maximum X axis reading.
      * 
      * @return The magnetometer's maximum X axis reading.
      */
-    int16_t getXMax(){return this->xMax;}
+    int16_t getXMax() const { return this->xMax; }
 
     /**
      * @brief Obtain the magnetometer's maximum Y axis reading.
      * 
      * @return The magnetometer's maximum Y axis reading.
      */ 
-    int16_t getYMax(){return this->yMax;}
+    int16_t getYMax() const { return this->yMax; }
 
     /**
      * @brief Obtain the magnetometer's maximum Z axis reading.
      * 
      * @return The magnetometer's maximum Z axis reading.
      */    
-    int16_t getZMax(){return this->zMax;}
+    int16_t getZMax() const { return this->zMax; }
 
     /**
      * @brief Obtain the magnetometer's minimum X axis reading.
      * 
      * @return The magnetometer's minimum X axis reading.
      */
-    int16_t getXMin(){return this->xMin;}
+    int16_t getXMin() const { return this->xMin; }
 
     /**
      * @brief Obtain the magnetometer's minimum Y axis reading.
      * 
      * @return The magnetometer's minimum Y axis reading.
      */
-    int16_t getYMin(){return this->yMin;}
+    int16_t getYMin() const { return this->yMin; }
 
     /**
      * @brief Obtain the magnetometer's minimum Z axis reading.
      * 
      * @return The magnetometer's minimum Z axis reading.
      */
-    int16_t getZMin(){return this->zMin;}
+    int16_t getZMin() const { return this->zMin; }
 
     private:
 
@@ -271,6 +278,11 @@ class QMC5883L{
      * @brief Reference to the platform I2C implementation.
      */
     II2C& bus;
+
+    /**
+     * @brief Reference to the platform clock implementation.
+     */
+    IClock& clock;
 
     /** 
      * @brief I2C address of the device.
@@ -288,12 +300,12 @@ class QMC5883L{
     int16_t xMin, yMin, zMin;
 
     /**
-     * @brief The most recent magnetometer reading in the indicated axis.
+     * @brief The most recent raw magnetometer reading in the indicated axis.
      */
     int16_t xRaw, yRaw, zRaw;
 
     /**
-     * @brief The most recent magnetomer reading in the indicated axis, normalized to [-1, 1].
+     * @brief The most recent magnetometer reading in the indicated axis, normalized to [-1, 1].
      */
     float x, y, z;
 
@@ -303,31 +315,32 @@ class QMC5883L{
     float xGauss, yGauss, zGauss;
 
     /**
-     * @brief The LSB resolution of the magnetometer.
+     * @brief The LSB-to-Gauss scale factor, set by setRange().
      */
     float lsbRes;
 
     /**
-     * @brief Reads raw magnetometer data from a specified axis and updates internal state.
-     * 
-     * @param msbReg The register address containing the MSB axis information.
-     * @param lsbReg The register address containing the LSB axis information.
-     * @param rawStorage The variable where the raw reading should be stored.
-     * @param normStorage the variable where the normalized reading should be stored.
-     * @param maxVal The maximum value for this axis.
-     * @param minVal The minimum value for this axis.
-     * @return the raw reading from the registers.
+     * @brief Reads raw magnetometer data from a starting register (little-endian pair),
+     *        scales it, and updates internal state.
+     *
+     * @param reg        Base register address (LSB register).
+     * @param rawStorage Where to store the raw int16 reading.
+     * @param normStorage Where to store the normalized [-1, 1] reading.
+     * @param gaussStorage Where to store the Gauss reading.
+     * @param maxVal     Calibration maximum for this axis.
+     * @param minVal     Calibration minimum for this axis.
+     * @return true if the I2C read succeeded, false otherwise.
      */
-    int16_t readAxis(uint8_t reg, int16_t& rawStorage, float& normStorage, float& gaussStorage, int16_t maxVal, int16_t minVal);
+    bool readAxis(uint8_t reg, int16_t& rawStorage, float& normStorage, float& gaussStorage, int16_t maxVal, int16_t minVal);
 
     /**
-     * @brief Normalize magnetometer reading to a value between -1 and 1.
+     * @brief Normalize a magnetometer reading to [-1, 1] using calibration extremes.
      * 
-     * @param val The magnetometer reading to be normalized.
-     * @param maxVal The maximum reading in the desired axis.
-     * @param minVal The minimum reading in the desired axis.
-     * @return The value normalized using the minimum and maximum values.
+     * @param val    The raw reading to normalize.
+     * @param maxVal The calibration maximum for this axis.
+     * @param minVal The calibration minimum for this axis.
+     * @return The normalized value, or 0.0 if max == min.
      */
-    float normalize(int16_t val, int16_t maxVal, int16_t minVal);
+    static float normalize(int16_t val, int16_t maxVal, int16_t minVal);
 };
 

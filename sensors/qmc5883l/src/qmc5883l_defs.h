@@ -3,45 +3,12 @@
 /**
  * @file qmc5883l_defs.h
  * @brief Register map and configuration constants for the QMC5883L driver.
- *
- * Override any @c #ifndef-wrapped value before including this header.
  */
 
+// I2C address — can be overridden before including this header
 #ifndef QMC5883L_I2C_ADDR_PIN_LOW
 #define QMC5883L_I2C_ADDR_PIN_LOW 0x2C
 #endif
-
-/** @name setOutputRate — valid ODR (Hz) */
-/// @{
-#define QMC5883L_OUTPUT_ODR_10_HZ  10
-#define QMC5883L_OUTPUT_ODR_50_HZ  50
-#define QMC5883L_OUTPUT_ODR_100_HZ 100
-#define QMC5883L_OUTPUT_ODR_200_HZ 200
-/// @}
-
-/** @name setOverSampleRate — valid ratios */
-/// @{
-#define QMC5883L_OVERSAMPLE_RATE_1 1
-#define QMC5883L_OVERSAMPLE_RATE_2 2
-#define QMC5883L_OVERSAMPLE_RATE_4 4
-#define QMC5883L_OVERSAMPLE_RATE_8 8
-/// @}
-
-/** @name setDownSampleRate — valid ratios */
-/// @{
-#define QMC5883L_DOWNSAMPLE_RATE_1 1
-#define QMC5883L_DOWNSAMPLE_RATE_2 2
-#define QMC5883L_DOWNSAMPLE_RATE_4 4
-#define QMC5883L_DOWNSAMPLE_RATE_8 8
-/// @}
-
-/** @name setRange — full scale (Gauss) */
-/// @{
-#define QMC5883L_RANGE_2_GAUSS  2
-#define QMC5883L_RANGE_8_GAUSS  8
-#define QMC5883L_RANGE_12_GAUSS 12
-#define QMC5883L_RANGE_30_GAUSS 30
-/// @}
 
 #ifndef QMC5883L_CALIBRATION_IDLE_MS_DEFAULT
 #define QMC5883L_CALIBRATION_IDLE_MS_DEFAULT 5000
