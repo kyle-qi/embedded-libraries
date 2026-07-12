@@ -1,0 +1,18 @@
+{
+    "name": "serial",
+    "version": "1.0.0",
+    "description": "Platform-agnostic serial abstraction (ISerial) with an Arduino HardwareSerial-backed implementation (ArduinoSerial). Supports both UART and USB-CDC transports transparently.",
+    "keywords": [
+        "serial",
+        "uart",
+        "usb-cdc",
+        "hal",
+        "abstraction"
+    ],
+    "frameworks": [
+        "arduino"
+    ],
+    "platforms": [
+        "*"
+    ]
+}

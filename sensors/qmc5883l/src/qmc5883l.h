@@ -154,29 +154,6 @@ class QMC5883L{
      */
     bool isOVFL();
 
-    /** 
-     * @brief Determines and stores the maximum and minimum readings in the X, Y, and Z directions.
-     *
-     * Blocks until no new extremes have been observed for @p calibrationTime milliseconds.
-     * Relies on the injected IClock for timing and delays.
-     * 
-     * @param calibrationTime Duration of no-change before ending calibration in ms
-     *                        (default @ref QMC5883L_CALIBRATION_IDLE_MS_DEFAULT).
-     */
-    void calibrate(uint32_t calibrationTime = QMC5883L_CALIBRATION_IDLE_MS_DEFAULT);
-
-    /**
-     * @brief Manually set magnetometer's maximum/minimum readings for calibration.
-     * 
-     * @param xMax The maximum reading in the X direction.
-     * @param yMax The maximum reading in the Y direction.
-     * @param zMax The maximum reading in the Z direction.
-     * @param xMin The minimum reading in the X direction.
-     * @param yMin The minimum reading in the Y direction.
-     * @param zMin The minimum reading in the Z direction.
-     */
-    void setCalibrationData(int16_t xMax, int16_t yMax, int16_t zMax, int16_t xMin, int16_t yMin, int16_t zMin);
-
     /**
      * @brief Reads all three magnetometer axes and updates internal state.
      *
@@ -332,15 +309,4 @@ class QMC5883L{
      * @return true if the I2C read succeeded, false otherwise.
      */
     bool readAxis(uint8_t reg, int16_t& rawStorage, float& normStorage, float& gaussStorage, int16_t maxVal, int16_t minVal);
-
-    /**
-     * @brief Normalize a magnetometer reading to [-1, 1] using calibration extremes.
-     * 
-     * @param val    The raw reading to normalize.
-     * @param maxVal The calibration maximum for this axis.
-     * @param minVal The calibration minimum for this axis.
-     * @return The normalized value, or 0.0 if max == min.
-     */
-    static float normalize(int16_t val, int16_t maxVal, int16_t minVal);
-};
 

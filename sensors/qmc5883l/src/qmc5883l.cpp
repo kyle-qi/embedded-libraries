@@ -101,82 +101,6 @@ bool QMC5883L::isOVFL(){
     return (bus.read(this->address, QMC5883L_STATUS_REG) & 0b10) != 0;
 }
 
-void QMC5883L::calibrate(uint32_t calibrationTime){
-    // Stores the max and min magnetometer reading per axis: [axis][0=min, 1=max]
-    int16_t minMaxReadings[3][2] = {
-        {INT16_MAX, INT16_MIN},
-        {INT16_MAX, INT16_MIN},
-        {INT16_MAX, INT16_MIN},
-    };
-
-    // Tracks timestamp of last array update
-    uint32_t timeStamp = clock.millis();
-
-    bool isCalibrated = false;
-    while (!isCalibrated) {
-        Serial.println("Keep moving compass...");
-
-        // Read all three axes individually so each updates internal state
-        int16_t readings[3];
-        bool ok = true;
-        ok &= readAxis(QMC5883L_XLSB_REG, xRaw, x, xGauss, xMin, xMax);
-        ok &= readAxis(QMC5883L_YLSB_REG, yRaw, y, yGauss, yMin, yMax);
-        ok &= readAxis(QMC5883L_ZLSB_REG, zRaw, z, zGauss, zMin, zMax);
-        readings[0] = xRaw;
-        readings[1] = yRaw;
-        readings[2] = zRaw;
-
-        if (ok) {
-            for (uint8_t i = 0; i < 3; ++i) {
-                if (readings[i] < minMaxReadings[i][0]) {
-                    minMaxReadings[i][0] = readings[i];
-                    timeStamp = clock.millis();
-                }
-                if (readings[i] > minMaxReadings[i][1]) {
-                    minMaxReadings[i][1] = readings[i];
-                    timeStamp = clock.millis();
-                }
-            }
-        }
-
-        if (clock.millis() - timeStamp > calibrationTime) {
-            isCalibrated = true;
-        }
-        clock.delayMs(10);
-    }
-
-    this->xMax = minMaxReadings[0][1];
-    this->yMax = minMaxReadings[1][1];
-    this->zMax = minMaxReadings[2][1];
-    this->xMin = minMaxReadings[0][0];
-    this->yMin = minMaxReadings[1][0];
-    this->zMin = minMaxReadings[2][0];
-
-    Serial.println("If you want to hardcode debug values, add this to main:");
-    Serial.print("<yourCompassName>.setCalibrationData(");
-    Serial.print(this->xMax);
-    Serial.print(", ");
-    Serial.print(this->yMax);
-    Serial.print(", ");
-    Serial.print(this->zMax);
-    Serial.print(", ");
-    Serial.print(this->xMin);
-    Serial.print(", ");
-    Serial.print(this->yMin);
-    Serial.print(", ");
-    Serial.print(this->zMin);
-    Serial.println(");");
-}
-
-void QMC5883L::setCalibrationData(int16_t xMax, int16_t yMax, int16_t zMax, int16_t xMin, int16_t yMin, int16_t zMin){
-    this->xMax = xMax;
-    this->yMax = yMax;
-    this->zMax = zMax;
-    this->xMin = xMin;
-    this->yMin = yMin;
-    this->zMin = zMin;
-}
-
 bool QMC5883L::read(){
     bool ok = true;
     ok &= readAxis(QMC5883L_XLSB_REG, this->xRaw, this->x, this->xGauss, this->xMin, this->xMax);
@@ -206,13 +130,4 @@ bool QMC5883L::readAxis(uint8_t reg, int16_t& rawStorage, float& normStorage, fl
     normStorage  = normalize(val, maxVal, minVal);
     gaussStorage = static_cast<float>(val) * lsbRes;
     return true;
-}
-
-float QMC5883L::normalize(int16_t val, int16_t maxVal, int16_t minVal) {
-    if (maxVal == minVal) {
-        return 0.0f;
-    }
-    float center    = (maxVal + minVal) / 2.0f;
-    float halfRange = (maxVal - minVal) / 2.0f;
-    return (val - center) / halfRange;
 }
