@@ -32,8 +32,12 @@ void setup() {
 
 void loop() {
     // Example: read register 0x00 from a device at address 0x68
-    uint8_t value = bus.read(0x68, 0x00);
-    Serial.print("Register 0x00 = 0x");
-    Serial.println(value, HEX);
+    Result<uint8_t, bool> reg = bus.read(0x68, 0x00);
+    if (reg) {
+        Serial.print("Register 0x00 = 0x");
+        Serial.println(reg.value, HEX);
+    } else {
+        Serial.println("Register read failed");
+    }
     delay(1000);
 }

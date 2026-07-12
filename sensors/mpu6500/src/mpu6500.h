@@ -2,6 +2,7 @@
 
 #include "mpu6500_defs.h"
 #include "i2c.h"
+#include "result.h"
 
 /**
  * @file mpu6500.h
@@ -176,13 +177,6 @@ public:
     bool wake();
 
     /**
-     * @brief Set or clear sleep mode.
-     * @param isAsleep true = sleep, false = wake.
-     * @return true on success.
-     */
-    bool setSleepMode(bool isAsleep);
-
-    /**
      * @brief Enable or disable the internal temperature sensor.
      * @param isEnable true to enable, false to disable.
      * @return true on success.
@@ -209,7 +203,8 @@ public:
 
     /**
      * @brief Check whether the sensor has a new sample ready.
-     * @return true if the DATA_RDY interrupt flag is set.
+     * @return true if the DATA_RDY interrupt flag is set. A failed read
+     *         returns false.
      */
     bool isDRDY();
 
@@ -217,22 +212,22 @@ public:
     // Sensor reads — individual axes
     // -------------------------------------------------------------------------
 
-    /** @return Raw 16-bit gyroscope X reading and updates getGyroX(). */
-    int16_t readGyroX();
-    /** @return Raw 16-bit gyroscope Y reading and updates getGyroY(). */
-    int16_t readGyroY();
-    /** @return Raw 16-bit gyroscope Z reading and updates getGyroZ(). */
-    int16_t readGyroZ();
+    /** @return Raw 16-bit gyroscope X reading (and updates getGyroX()). */
+    Result<int16_t, bool> readGyroX();
+    /** @return Raw 16-bit gyroscope Y reading (and updates getGyroY()). */
+    Result<int16_t, bool> readGyroY();
+    /** @return Raw 16-bit gyroscope Z reading (and updates getGyroZ()). */
+    Result<int16_t, bool> readGyroZ();
 
-    /** @return Raw 16-bit accelerometer X reading and updates getAccelX(). */
-    int16_t readAccelX();
-    /** @return Raw 16-bit accelerometer Y reading and updates getAccelY(). */
-    int16_t readAccelY();
-    /** @return Raw 16-bit accelerometer Z reading and updates getAccelZ(). */
-    int16_t readAccelZ();
+    /** @return Raw 16-bit accelerometer X reading (and updates getAccelX()). */
+    Result<int16_t, bool> readAccelX();
+    /** @return Raw 16-bit accelerometer Y reading (and updates getAccelY()). */
+    Result<int16_t, bool> readAccelY();
+    /** @return Raw 16-bit accelerometer Z reading (and updates getAccelZ()). */
+    Result<int16_t, bool> readAccelZ();
 
-    /** @return Raw 16-bit temperature reading and updates getTemp(). */
-    int16_t readTemp();
+    /** @return Raw 16-bit temperature reading (and updates getTemp()). */
+    Result<int16_t, bool> readTemp();
 
     // -------------------------------------------------------------------------
     // Sensor reads — burst (all axes in one I2C transaction)
@@ -243,16 +238,22 @@ public:
      *
      * Guarantees all three values come from the same sample. Prefer this
      * over calling readGyroX/Y/Z individually.
+     *
+     * @return true if the burst read succeeded. On failure the stored values
+     *         are left unchanged.
      */
-    void readGyro();
+    bool readGyro();
 
     /**
      * @brief Read all three accelerometer axes in a single 6-byte burst.
      *
      * Guarantees all three values come from the same sample. Prefer this
      * over calling readAccelX/Y/Z individually.
+     *
+     * @return true if the burst read succeeded. On failure the stored values
+     *         are left unchanged.
      */
-    void readAccel();
+    bool readAccel();
 
     // -------------------------------------------------------------------------
     // Getters — scaled values
@@ -276,11 +277,6 @@ public:
     float getTemp() const { return temp; }
 
     // -------------------------------------------------------------------------
-    // Getters — raw values (private — use scaled getters instead)
-    // -------------------------------------------------------------------------
-
-
-    // -------------------------------------------------------------------------
     // Identity
     // -------------------------------------------------------------------------
 
@@ -289,9 +285,9 @@ public:
      *
      * Expected value: MPU6500_WHO_AM_I_VAL (0x70).
      *
-     * @return Register contents.
+     * @return Result carrying the register contents and a success status.
      */
-    uint8_t whoAmI();
+    Result<uint8_t, bool> whoAmI();
 
 private:
     
@@ -304,11 +300,6 @@ private:
     float xAccel, yAccel, zAccel;  ///< m/s²
     float temp;                    ///< °C
 
-    // Raw outputs
-    int16_t xGyroRaw,  yGyroRaw,  zGyroRaw;
-    int16_t xAccelRaw, yAccelRaw, zAccelRaw;
-    int16_t tempRaw;
-
     // LSB scale factors — kept in sync with setGyroRange / setAccelRange
     float lsbResGyro;   ///< rad/s per LSB
     float lsbResAccel;  ///< m/s² per LSB
@@ -317,9 +308,11 @@ private:
 
     /**
      * @brief Read two consecutive big-endian bytes from @p reg, scale, and store.
+     *
+     * @return Result carrying the raw value and a success status. On failure
+     *         the stored scaled value is left unchanged.
      */
-    int16_t readSensor(uint8_t reg, int16_t& rawOut, float& scaledOut,
-                       SensorChannel channel);
+    Result<int16_t, bool> readSensor(uint8_t reg, float& scaledOut, SensorChannel channel);
 
     /**
      * @brief Assemble a big-endian int16 from two raw bytes.

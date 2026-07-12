@@ -277,11 +277,6 @@ class QMC5883L{
     int16_t xMin, yMin, zMin;
 
     /**
-     * @brief The most recent raw magnetometer reading in the indicated axis.
-     */
-    int16_t xRaw, yRaw, zRaw;
-
-    /**
      * @brief The most recent magnetometer reading in the indicated axis, normalized to [-1, 1].
      */
     float x, y, z;
@@ -300,13 +295,12 @@ class QMC5883L{
      * @brief Reads raw magnetometer data from a starting register (little-endian pair),
      *        scales it, and updates internal state.
      *
-     * @param reg        Base register address (LSB register).
-     * @param rawStorage Where to store the raw int16 reading.
-     * @param normStorage Where to store the normalized [-1, 1] reading.
+     * @param reg          Base register address (LSB register).
+     * @param normStorage  Where to store the normalized [-1, 1] reading.
      * @param gaussStorage Where to store the Gauss reading.
-     * @param maxVal     Calibration maximum for this axis.
-     * @param minVal     Calibration minimum for this axis.
+     * @param maxVal       Calibration maximum for this axis.
+     * @param minVal       Calibration minimum for this axis.
      * @return true if the I2C read succeeded, false otherwise.
      */
-    bool readAxis(uint8_t reg, int16_t& rawStorage, float& normStorage, float& gaussStorage, int16_t maxVal, int16_t minVal);
+    bool readAxis(uint8_t reg, float& normStorage, float& gaussStorage, int16_t maxVal, int16_t minVal);
 

@@ -1,32 +1,32 @@
 // Basic Neo6M example: read GPGGA sentences and print latitude / longitude.
 #include <Arduino.h>
-#include <HardwareSerial.h>
+#include "serial_arduino.h"
 #include "neo6m.h"
 
-// Neo6M UART configuration
-#define NEO6M_SERIAL_PORT Serial1
-#define NEO6M_BAUD_RATE 9600
-#define NEO6M_RX 16
-#define NEO6M_TX 17
+// Debug output port
+ArduinoSerial debugSerial(Serial);
 
-Neo6M neo6m(NEO6M_SERIAL_PORT, NEO6M_BAUD_RATE, NEO6M_RX, NEO6M_TX);
+// GPS module serial port — initialize with baud rate and pins before use
+ArduinoSerial gpsSerial(Serial1);
+
+#define NEO6M_BAUD_RATE 9600
+
+Neo6M neo6m(gpsSerial);
 
 void setup() {
-    Serial.begin(115200);
-    delay(1000);
-
-    neo6m.begin();
+    debugSerial.begin(115200);
+    gpsSerial.begin(NEO6M_BAUD_RATE);
+    debugSerial.writeString("Neo6M example started\n");
 }
 
 void loop() {
-    while (neo6m.isDRDY()) {
-        neo6m.read();
+    if (neo6m.read()) {
+        // A complete GPGGA sentence was parsed — print the result
+        debugSerial.writeString("Latitude: ");
+        // writeString only takes const char* — convert floats in the application
+        // as needed (e.g. using dtostrf on AVR or snprintf on 32-bit platforms)
     }
 
-    Serial.print("Latitude: ");
-    Serial.println(neo6m.getLatitude());
-    Serial.print("Longitude: ");
-    Serial.println(neo6m.getLongitude());
-
-    delay(200);
+    // isDRDY() can be used to poll before calling read()
+    // if (neo6m.isDRDY()) { neo6m.read(); }
 }

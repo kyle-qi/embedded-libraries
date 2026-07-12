@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "result.h"
 
 /**
  * @file i2c.h
@@ -45,9 +46,10 @@ public:
      *
      * @param addr 7-bit I2C device address.
      * @param reg  Target register address.
-     * @return The byte read from the register.
+     * @return Result carrying the byte read and a success status. On failure
+     *         the value is unspecified and the status is false.
      */
-    virtual uint8_t read(uint8_t addr, uint8_t reg) = 0;
+    virtual Result<uint8_t, bool> read(uint8_t addr, uint8_t reg) = 0;
 
     /**
      * @brief Read @p len consecutive bytes starting at @p reg into @p buf.

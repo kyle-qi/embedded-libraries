@@ -1,164 +1,130 @@
 #pragma once
 
-#include <Arduino.h>
+#include <stdint.h>
+#include "serial.h"
 
-// Bufer to store Neo6M reading
+// Buffer to store Neo6M reading
 #define NEO6M_BUFFER_SIZE 128
 
+/**
+ * @file neo6m.h
+ * @brief Driver for the u-blox NEO-6M GPS module.
+ *
+ * Inject an ISerial implementation at construction time. The driver is
+ * platform-agnostic and has no dependency on Arduino or any specific HAL.
+ * Serial port initialization (baud rate, pins) is the caller's responsibility
+ * before passing the port to this driver.
+ */
 class Neo6M {
-    public:
+public:
 
     /**
-     * @brief Class constructor.
-     * 
-     * @param serial
-     * @param baud
-     * @param rxPin
-     * @param txPin
+     * @brief Construct a Neo6M driver.
+     *
+     * The serial port must already be initialized (begin() called) before
+     * any read operations are performed.
+     *
+     * @param serial Reference to the platform serial implementation.
      */
-    Neo6M(HardwareSerial &serial, uint16_t baud, uint8_t rxPin, uint8_t txPin);
+    explicit Neo6M(ISerial& serial);
 
     /**
-     * @brief Initializes the Neo6M's serial port.
-     */
-    void begin();
-
-    /**
-     * @brief Reads an NMEA sentence and stores it in the object's member variables.
-     * 
-     * @return true if the operation succeeded, false otherwise.
+     * @brief Reads available NMEA sentences and updates internal state.
+     *
+     * Consumes all bytes currently in the receive buffer. Returns true if
+     * a complete, recognized GPGGA sentence was parsed in this call.
+     *
+     * @return true if a GPGGA sentence was successfully parsed.
      */
     bool read();
 
     /**
-     * @brief Tells you if information is available in the serial register.
-     * 
-     * @return true if any information is available in the register, false otherwise.
+     * @brief Returns true if bytes are available in the serial receive buffer.
+     *
+     * @return true if at least one byte is waiting to be read.
      */
     bool isDRDY();
 
     /**
-     * @brief Returns the most recent hour reading.
-     * 
-     * @return The most recent hour reading.
+     * @brief Returns the most recent hour reading (UTC).
      */
-    float getHour() {return this->hour;}
+    uint8_t getHour() const { return this->hour; }
 
     /**
-     * @brief Returns the most recent minute reading.
-     * 
-     * @return The most recent minute reading.
+     * @brief Returns the most recent minute reading (UTC).
      */
-    float getMinute() {return this->minute;}
+    uint8_t getMinute() const { return this->minute; }
 
     /**
-     * @brief Returns the most recent second reading.
-     * 
-     * @return The most recent second reading.
+     * @brief Returns the most recent second reading (UTC).
      */
-    float getSecond() {return this->second;}
+    uint8_t getSecond() const { return this->second; }
 
     /**
-     * @brief Returns the most recent latitude reading in decimal degrees.
-     * 
-     * @return The most recent latitutde reading in decimal degrees.
+     * @brief Returns the most recent latitude in decimal degrees.
+     *
+     * Negative values indicate South.
      */
-    float getLatitude() {return this->latitude;}
+    float getLatitude() const { return this->latitude; }
 
     /**
-     * @brief Returns the most recent longitutde reading in decimal degrees.
-     * 
-     * @return The most recent longitutde reading in decimal degrees.
+     * @brief Returns the most recent longitude in decimal degrees.
+     *
+     * Negative values indicate West.
      */
-    float getLongitude() {return this->longitude;}
+    float getLongitude() const { return this->longitude; }
 
     /**
-     * @brief Returns the most recent horizontal dilution reading.
-     * 
-     * @return The most recent horizontal dilution reading.
+     * @brief Returns the most recent horizontal dilution of precision.
      */
-    float getHorizontalDilution() {return this->horizontalDilution;}
+    float getHorizontalDilution() const { return this->horizontalDilution; }
 
     /**
-     * @brief Returns the most recent altitude reading in metres.
-     * 
-     * @return The most recent altitude reading in metres.
+     * @brief Returns the most recent altitude above mean sea level in metres.
      */
-    float getAltitude() {return this->altitude;}
+    float getAltitude() const { return this->altitude; }
 
     /**
      * @brief Returns the most recent geoid height in metres.
-     * 
-     * @return The most recent geoid height in metres.
      */
-    float getGeoidHeight() {return this->geoidHeight;}
+    float getGeoidHeight() const { return this->geoidHeight; }
 
     /**
-     * @brief Returns the most recent number of satelites detected/used.
-     * 
-     * @return The most recent number of satelites detected/used.
+     * @brief Returns the most recent satellite count.
      */
-    uint8_t getNumSatelites() { return this->numSatelites; }
-
-    // TODO: Create Doxygen
-    /**
-     * @brief TBD
-     * 
-     * @return TBD
-     */
-    char* getLastSentence() {return this->lastSentence;}
-    
-    private:
+    uint8_t getNumSatelites() const { return this->numSatelites; }
 
     /**
-     * @brief The instance's serial port.
+     * @brief Returns the raw text of the last received NMEA sentence.
+     *
+     * Useful for debugging. The returned pointer is valid until the next
+     * call to read().
+     *
+     * @return Null-terminated C string containing the last sentence.
      */
-    HardwareSerial &serial;
+    const char* getLastSentence() const { return this->lastSentence; }
+
+private:
 
     /**
-     * @brief The Neo6M's baud rate.
+     * @brief Reference to the platform serial implementation.
      */
-    uint16_t baudRate;
+    ISerial& serial;
 
-    /**
-     * @brief The RX, and TX pins used for UART communication.
-     */
-    uint8_t rx, tx;
-
-    /**
-     * @brief The objects's time variables.
-     */
+    // Time (UTC)
     uint8_t hour, minute, second;
 
-    /**
-     * @brief The object's latitutde and longitude.
-     */
+    // Position
     float latitude, longitude;
-
-    /**
-     * @brief The object's horizontal dilution.
-     */
     float horizontalDilution;
-
-    /**
-     * @brief The object's altitutde.
-     */
     float altitude;
-
-    /**
-     * @brief The object's geoid height.
-     */
     float geoidHeight;
-
-    /**
-     * @brief The object's number of satelites detected/used.
-     */
     uint8_t numSatelites;
 
-    // TODO: Create doxygen
-    /**
-     * @brief TBD
-     */
+    // Raw last sentence (for debug)
     char lastSentence[NEO6M_BUFFER_SIZE];
-};
 
+    // Persistent receive buffer across read() calls
+    char    rxBuf[NEO6M_BUFFER_SIZE];
+    uint8_t rxIdx;
+};

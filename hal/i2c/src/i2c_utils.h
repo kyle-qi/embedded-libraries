@@ -28,8 +28,11 @@ namespace i2c {
  * @return true on success, false otherwise.
  */
 inline bool writeMasked(II2C& bus, uint8_t addr, uint8_t reg, uint8_t data, uint8_t mask) {
-    uint8_t current = bus.read(addr, reg);
-    uint8_t updated = static_cast<uint8_t>((current & ~mask) | (data & mask));
+    Result<uint8_t, bool> current = bus.read(addr, reg);
+    if (!current) {
+        return false;
+    }
+    uint8_t updated = static_cast<uint8_t>((current.value & ~mask) | (data & mask));
     return bus.write(addr, reg, updated);
 }
 

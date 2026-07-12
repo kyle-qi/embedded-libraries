@@ -12,6 +12,9 @@ void setup() {
 void loop() {
     // Echo any received bytes back to the sender
     while (serial.available() > 0) {
-        serial.write(serial.read());
+        Result<uint8_t, bool> r = serial.read();
+        if (r) {
+            serial.write(r.value);
+        }
     }
 }

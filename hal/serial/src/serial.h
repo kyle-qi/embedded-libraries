@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "result.h"
 
 /**
  * @file serial.h
@@ -66,13 +67,10 @@ public:
     /**
      * @brief Read a single byte from the receive buffer.
      *
-     * Call available() first to confirm data is ready. Behaviour when
-     * called with no data available is implementation-defined (typically
-     * returns 0xFF or blocks).
-     *
-     * @return The next byte from the receive buffer.
+     * @return Result carrying the byte read and a success status. If no data
+     *         is available the status is false and the value is unspecified.
      */
-    virtual uint8_t read() = 0;
+    virtual Result<uint8_t, bool> read() = 0;
 
     /**
      * @brief Read up to @p len bytes into @p buf without blocking.
@@ -88,9 +86,10 @@ public:
     /**
      * @brief Return the next byte in the receive buffer without consuming it.
      *
-     * @return The next byte, or -1 if no data is available.
+     * @return Result carrying the peeked byte and a success status. If no data
+     *         is available the status is false and the value is unspecified.
      */
-    virtual int16_t peek() = 0;
+    virtual Result<uint8_t, bool> peek() = 0;
 
     // -------------------------------------------------------------------------
     // Control

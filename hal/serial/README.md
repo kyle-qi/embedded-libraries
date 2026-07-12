@@ -17,10 +17,12 @@ Provides a platform-agnostic serial abstraction for HAL and library code. The li
 | `writeBytes(buf, len)` | Transmit `len` bytes from `buf`. Returns bytes written. |
 | `writeString(str)` | Transmit a null-terminated string (without the null). |
 | `available()` | Number of bytes waiting in the receive buffer. |
-| `read()` | Read and consume the next byte from the receive buffer. |
+| `read()` | Read and consume the next byte. Returns `Result<uint8_t, bool>`. |
 | `readBytes(buf, len)` | Read up to `len` bytes into `buf` without blocking. |
-| `peek()` | Read the next byte without consuming it. Returns -1 if empty. |
+| `peek()` | Peek the next byte without consuming it. Returns `Result<uint8_t, bool>`. |
 | `flush()` | Block until all pending transmit bytes have been sent. |
+
+`read()` and `peek()` return a `Result<uint8_t, bool>` (see the `core` library): a `false` status means no byte was available.
 
 ### `ArduinoSerial` (serial_arduino.h)
 
@@ -47,7 +49,10 @@ void setup() {
 
 void loop() {
     while (serial.available() > 0) {
-        serial.write(serial.read());
+        Result<uint8_t, bool> r = serial.read();
+        if (r) {
+            serial.write(r.value);
+        }
     }
 }
 ```
@@ -107,8 +112,9 @@ public:
 
     uint8_t available() override { return rxLen - rxPos; }
 
-    uint8_t read() override {
-        return (rxPos < rxLen) ? rxBuf[rxPos++] : 0xFF;
+    Result<uint8_t, bool> read() override {
+        if (rxPos < rxLen) return {rxBuf[rxPos++], true};
+        return {0, false};
     }
 
     uint8_t readBytes(uint8_t* buf, uint8_t len) override {
@@ -117,8 +123,9 @@ public:
         return n;
     }
 
-    int16_t peek() override {
-        return (rxPos < rxLen) ? rxBuf[rxPos] : -1;
+    Result<uint8_t, bool> peek() override {
+        if (rxPos < rxLen) return {rxBuf[rxPos], true};
+        return {0, false};
     }
 
     void flush() override {}

@@ -1,0 +1,17 @@
+{
+    "name": "core",
+    "version": "1.0.0",
+    "description": "Shared core utilities for embedded libraries. Provides Result<T, E>, a zero-overhead value-or-status wrapper for error handling.",
+    "keywords": [
+        "result",
+        "error-handling",
+        "core",
+        "utility"
+    ],
+    "frameworks": [
+        "*"
+    ],
+    "platforms": [
+        "*"
+    ]
+}

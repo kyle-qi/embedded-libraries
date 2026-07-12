@@ -26,8 +26,10 @@ drivers. The library has two parts:
 | `write(addr, reg, data)` | Write a full register byte. |
 | `writeMasked(addr, reg, data, mask)` | Read-modify-write masked bits. |
 | `writeBit(addr, reg, bit, bitPos)` | Set or clear a single bit. |
-| `read(addr, reg)` | Read a single register byte. |
-| `readTwo(addr, msbReg, lsbReg)` | Read two bytes into a big-endian 16-bit value. |
+| `read(addr, reg)` | Read a single register byte. Returns `Result<uint8_t, bool>`. |
+| `readBytes(addr, reg, buf, len)` | Read `len` consecutive bytes into `buf`. |
+
+`read()` returns a `Result<uint8_t, bool>` (see the `core` library): a `false` status means the transaction failed (NACK, timeout, or no data).
 
 ### `ArduinoI2C` (arduino_i2c.h)
 
@@ -57,27 +59,34 @@ void setup() {
 ### Implementing a mock for host-side testing
 
 ```cpp
-#include "i2c_interface.h"
+#include "i2c.h"
 
 class MockI2C : public II2C {
 public:
     uint8_t registers[256] = {};
 
     bool write(uint8_t, uint8_t reg, uint8_t data) override {
-        registers[reg] = data; return true;
+        registers[reg] = data;
+        return true;
     }
-    bool writeMasked(uint8_t addr, uint8_t reg, uint8_t data, uint8_t mask) override {
-        registers[reg] = (registers[reg] & ~mask) | (data & mask); return true;
+
+    bool writeBytes(uint8_t, uint8_t reg, const uint8_t* buf, uint8_t len) override {
+        for (uint8_t i = 0; i < len; ++i) registers[reg + i] = buf[i];
+        return true;
     }
-    bool writeBit(uint8_t addr, uint8_t reg, bool bit, uint8_t pos) override {
-        return writeMasked(addr, reg, static_cast<uint8_t>(bit) << pos, 1u << pos);
+
+    Result<uint8_t, bool> read(uint8_t, uint8_t reg) override {
+        return {registers[reg], true};
     }
-    uint8_t read(uint8_t, uint8_t reg) override { return registers[reg]; }
-    uint16_t readTwo(uint8_t, uint8_t msb, uint8_t lsb) override {
-        return static_cast<uint16_t>((registers[msb] << 8) | registers[lsb]);
+
+    bool readBytes(uint8_t, uint8_t reg, uint8_t* buf, uint8_t len) override {
+        for (uint8_t i = 0; i < len; ++i) buf[i] = registers[reg + i];
+        return true;
     }
 };
 ```
+
+The masked/bit helpers (`writeMasked`, `writeBit`) are free functions in `i2c_utils.h` built on top of this interface — they work with any `II2C` implementation, including this mock, without needing to be overridden.
 
 ## Supported Platforms
 

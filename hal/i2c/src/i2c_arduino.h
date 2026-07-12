@@ -49,12 +49,20 @@ public:
         return Wire.endTransmission() == 0;
     }
 
-    uint8_t read(uint8_t addr, uint8_t reg) override {
+    Result<uint8_t, bool> read(uint8_t addr, uint8_t reg) override {
         Wire.beginTransmission(addr);
         Wire.write(reg);
-        Wire.endTransmission(false); // repeated start
-        Wire.requestFrom(addr, static_cast<uint8_t>(1));
-        return Wire.read();
+        if (Wire.endTransmission(false) != 0) { // repeated start
+            return {0, false};
+        }
+        if (Wire.requestFrom(addr, static_cast<uint8_t>(1)) != 1) {
+            return {0, false};
+        }
+        int value = Wire.read();
+        if (value < 0) {
+            return {0, false};
+        }
+        return {static_cast<uint8_t>(value), true};
     }
 
     bool readBytes(uint8_t addr, uint8_t reg, uint8_t* buf, uint8_t len) override {

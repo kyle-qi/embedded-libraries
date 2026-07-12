@@ -68,16 +68,24 @@ public:
         return static_cast<uint8_t>(serial.available());
     }
 
-    uint8_t read() override {
-        return static_cast<uint8_t>(serial.read());
+    Result<uint8_t, bool> read() override {
+        int value = serial.read();
+        if (value < 0) {
+            return {0, false};
+        }
+        return {static_cast<uint8_t>(value), true};
     }
 
     uint8_t readBytes(uint8_t* buf, uint8_t len) override {
         return static_cast<uint8_t>(serial.readBytes(reinterpret_cast<char*>(buf), len));
     }
 
-    int16_t peek() override {
-        return static_cast<int16_t>(serial.peek());
+    Result<uint8_t, bool> peek() override {
+        int value = serial.peek();
+        if (value < 0) {
+            return {0, false};
+        }
+        return {static_cast<uint8_t>(value), true};
     }
 
     // -------------------------------------------------------------------------
