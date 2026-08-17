@@ -332,7 +332,7 @@
 // Configuration macro arguments
 // ============================================================================
 
-/** @name setSampleRateDivider — common divider values */
+/** @name setSampleRateDivider - common divider values */
 /// @{
 #define MPU6500_SMPLRT_DIV_1    0    ///< 1 kHz (no division)
 #define MPU6500_SMPLRT_DIV_9    9    ///< ~100 Hz
@@ -346,7 +346,7 @@
 #define MPU6500_FIFO_STOP_WHEN_FULL   true
 /// @}
 
-/** @name setGyroLPF — DLPF bandwidth (Hz) */
+/** @name setGyroLPF - DLPF bandwidth (Hz) */
 /// @{
 #define MPU6500_GYRO_DLPF_BW_250_HZ  250
 #define MPU6500_GYRO_DLPF_BW_184_HZ  184
@@ -358,7 +358,7 @@
 #define MPU6500_GYRO_DLPF_BW_3600_HZ 3600
 /// @}
 
-/** @name setGyroRange — full scale (dps) */
+/** @name setGyroRange - full scale (dps) */
 /// @{
 #define MPU6500_GYRO_FS_250DPS  250
 #define MPU6500_GYRO_FS_500DPS  500
@@ -366,7 +366,7 @@
 #define MPU6500_GYRO_FS_2000DPS 2000
 /// @}
 
-/** @name setAccelLPF — DLPF bandwidth (Hz) */
+/** @name setAccelLPF - DLPF bandwidth (Hz) */
 /// @{
 #define MPU6500_ACCEL_DLPF_BW_460_HZ 460
 #define MPU6500_ACCEL_DLPF_BW_184_HZ 184
@@ -377,7 +377,7 @@
 #define MPU6500_ACCEL_DLPF_BW_5_HZ   5
 /// @}
 
-/** @name setAccelRange — full scale (g) */
+/** @name setAccelRange - full scale (g) */
 /// @{
 #define MPU6500_ACCEL_FS_2G  2
 #define MPU6500_ACCEL_FS_4G  4

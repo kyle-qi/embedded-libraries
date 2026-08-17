@@ -8,23 +8,23 @@
  *
  * Provides two types:
  *
- * - `Status` — a scoped enum used as the error type in all `Result`
+ * - `Status` - a scoped enum used as the error type in all `Result`
  *   instantiations across this repo. Currently has two values (`Ok` and
  *   `Error`) for a thin but unambiguous implementation. Replace the enum
  *   values with richer codes (e.g. `BusNack`, `Timeout`) when needed
  *   without changing any call-site shape.
  *
- * - `Result<T, E>` — pairs a returned `value` with a `status`. Zero
+ * - `Result<T, E>` - pairs a returned `value` with a `status`. Zero
  *   overhead: no heap, no exceptions, no RTTI, C++11 compatible.
  *
  * ## Conventions
  *
- * - Functions returning **data that may fail** → `Result<T, Status>`
+ * - Functions returning **data that may fail** -> `Result<T, Status>`
  * - Functions returning a **flag that may fail** (predicates like `isDRDY`)
- *   → `Result<bool, Status>`:
- *     - `!r` or `r.status != Status::Ok` → transport/hardware error
- *     - `r.value` → the actual flag value (only meaningful when `r.ok()`)
- * - Functions that only **perform an action** (setters, config) → plain `bool`
+ *   -> `Result<bool, Status>`:
+ *     - `!r` or `r.status != Status::Ok` -> transport/hardware error
+ *     - `r.value` -> the actual flag value (only meaningful when `r.ok()`)
+ * - Functions that only **perform an action** (setters, config) -> plain `bool`
  *
  * ## Usage
  *
@@ -45,7 +45,7 @@
  * @brief Operation status. Used as the `E` parameter in all `Result` types.
  *
  * Extend with additional values (e.g. `BusNack`, `Timeout`, `InvalidArg`)
- * when finer-grained error reporting is needed — no call-site shape changes
+ * when finer-grained error reporting is needed - no call-site shape changes
  * required.
  */
 enum class Status : uint8_t {
@@ -72,7 +72,7 @@ struct Result {
     E status;
 
     /**
-     * @brief Contextual conversion to bool — true if the operation succeeded.
+     * @brief Contextual conversion to bool - true if the operation succeeded.
      *
      * Allows `if (result)` and `if (!result)` idioms.
      */

@@ -8,7 +8,7 @@
  * @file serial.h
  * @brief Arduino HardwareSerial-backed serial helper.
  *
- * Wraps any Arduino HardwareSerial instance (Serial, Serial1, Serial2, …),
+ * Wraps any Arduino HardwareSerial instance (Serial, Serial1, Serial2, ...),
  * covering both UART-backed and USB-CDC-backed ports. Instantiate once in
  * your sketch and pass it by reference to any library that needs serial I/O.
  *

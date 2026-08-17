@@ -39,11 +39,13 @@ void setup() {
 }
 
 void loop() {
-    if (mag.isDRDY()) {
-        mag.read();
-        Serial.print("X: "); Serial.print(mag.getX());
-        Serial.print(" Y: "); Serial.print(mag.getY());
-        Serial.print(" Z: "); Serial.println(mag.getZ());
+    Result<bool, Status> dr = mag.isDRDY();
+    if (dr && dr.value) {
+        if (mag.read()) {
+            Serial.print("X: "); Serial.print(mag.getX());
+            Serial.print(" Y: "); Serial.print(mag.getY());
+            Serial.print(" Z: "); Serial.println(mag.getZ());
+        }
     }
     delay(200);
 }

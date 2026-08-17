@@ -17,7 +17,7 @@ void setup() {
         Serial.println("I2C failed to initialize!");
     }
 
-    // Probe addresses 0x01–0x7E and print any that respond
+    // Probe addresses 0x01-0x7E and print any that respond
     Serial.println("Scanning for I2C devices...");
     bool found = false;
     for (uint8_t addr = 1; addr < 127; ++addr) {

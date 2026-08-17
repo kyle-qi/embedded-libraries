@@ -28,14 +28,16 @@ void setup() {
 }
 
 void loop() {
-    if (qmc5883l.isDRDY()) {
-        qmc5883l.read();
-        Serial.print("X: ");
-        Serial.print(qmc5883l.getX());
-        Serial.print(" Y: ");
-        Serial.print(qmc5883l.getY());
-        Serial.print(" Z: ");
-        Serial.println(qmc5883l.getZ());
+    Result<bool, Status> dr = qmc5883l.isDRDY();
+    if (dr && dr.value) {
+        if (qmc5883l.read()) {
+            Serial.print("X: ");
+            Serial.print(qmc5883l.getX());
+            Serial.print(" Y: ");
+            Serial.print(qmc5883l.getY());
+            Serial.print(" Z: ");
+            Serial.println(qmc5883l.getZ());
+        }
     }
     delay(200);
 }

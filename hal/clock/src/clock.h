@@ -35,7 +35,7 @@ public:
     /**
      * @brief Return the number of microseconds since the system started.
      *
-     * Wraps to zero after approximately 71.6 minutes (2^32 µs).
+     * Wraps to zero after approximately 71.6 minutes (2^32 us).
      *
      * @return Elapsed microseconds as an unsigned 32-bit value.
      */
@@ -59,7 +59,7 @@ public:
     /**
      * @brief Block execution for at least @p us microseconds.
      *
-     * @note Accuracy below ~10 µs is platform-dependent.
+     * @note Accuracy below ~10 us is platform-dependent.
      *
      * @param us Number of microseconds to delay.
      */

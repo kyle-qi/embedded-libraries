@@ -40,7 +40,7 @@ bool Neo6M::read() {
             rxIdx = 0;
 
             if (strncmp(rxBuf, "$GPGGA", 6) == 0) {
-                // Work on a mutable copy — strtok modifies the string in place
+                // Work on a mutable copy - strtok modifies the string in place
                 char work[NEO6M_BUFFER_SIZE];
                 strncpy(work, rxBuf, NEO6M_BUFFER_SIZE);
                 work[NEO6M_BUFFER_SIZE - 1] = '\0';
@@ -102,7 +102,7 @@ bool Neo6M::read() {
             if (rxIdx < NEO6M_BUFFER_SIZE - 1) {
                 rxBuf[rxIdx++] = c;
             } else {
-                // Line too long — discard and restart
+                // Line too long - discard and restart
                 rxIdx = 0;
             }
         }

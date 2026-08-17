@@ -10,7 +10,7 @@ static constexpr float kLsbResTable[4] = {
      2.0f  / 32768.0f,  // Range::Gauss2
 };
 
-// Power-on reset default: 8 Gauss range (register default is 0b00 → Gauss30,
+// Power-on reset default: 8 Gauss range (register default is 0b00 -> Gauss30,
 // but we initialise to match configureDefaults()).
 static constexpr float kDefaultLsbRes = kLsbResTable[2]; // Gauss8
 
@@ -69,8 +69,11 @@ bool QMC5883L::setDownSampleRate(DownSampleRate osr){
 bool QMC5883L::setRange(Range range){
     uint8_t idx = static_cast<uint8_t>(range);
     uint8_t bits = idx << 2;
-    this->lsbRes = kLsbResTable[idx];
-    return i2c::writeMasked(bus, this->address, QMC5883L_CTRLB_REG, bits, 0b00001100);
+    bool success = i2c::writeMasked(bus, this->address, QMC5883L_CTRLB_REG, bits, 0b00001100);
+    if (success) {
+        this->lsbRes = kLsbResTable[idx];
+    }
+    return success;
 }
 
 bool QMC5883L::setSetResetMode(SetResetMode mode){
@@ -112,32 +115,29 @@ Result<bool, Status> QMC5883L::isOVFL(){
     return {(status.value & 0b10) != 0, Status::Ok};
 }
 
-Status QMC5883L::read(){
-    bool ok = true;
-    ok &= readAxis(QMC5883L_XLSB_REG, this->x, this->xGauss, this->xMin, this->xMax) == Status::Ok;
-    ok &= readAxis(QMC5883L_YLSB_REG, this->y, this->yGauss, this->yMin, this->yMax) == Status::Ok;
-    ok &= readAxis(QMC5883L_ZLSB_REG, this->z, this->zGauss, this->zMin, this->zMax) == Status::Ok;
-    return ok ? Status::Ok : Status::Error;
-}
-
-float QMC5883L::azimuth(float xNorm, float yNorm) const {
-    float angle = atan2f(yNorm, xNorm) * RAD_TO_DEG;
-    // Convert to compass bearing [0, 360)
-    return fmodf(450.0f - angle, 360.0f);
-}
-
-// -----------------------------------------------------------------------------
-// Private helpers
-// -----------------------------------------------------------------------------
-
-Status QMC5883L::readAxis(uint8_t reg, float& normStorage, float& gaussStorage, int16_t maxVal, int16_t minVal){
-    uint8_t buf[2];
-    if (!bus.readBytes(this->address, reg, buf, 2)) {
-        return Status::Error;
+bool QMC5883L::read(){
+    uint8_t buf[6];
+    if (!bus.readBytes(this->address, QMC5883L_XLSB_REG, buf, 6)) {
+        return false;
     }
-    // QMC5883L output registers are little-endian: LSB at reg, MSB at reg+1
-    int16_t val = static_cast<int16_t>((static_cast<uint16_t>(buf[1]) << 8) | buf[0]);
-    normStorage  = normalize(val, maxVal, minVal);
-    gaussStorage = static_cast<float>(val) * lsbRes;
-    return Status::Ok;
+
+    // Output registers are little-endian: LSB, MSB per axis, X then Y then Z
+    const int16_t rawX = toInt16LE(buf[0], buf[1]);
+    const int16_t rawY = toInt16LE(buf[2], buf[3]);
+    const int16_t rawZ = toInt16LE(buf[4], buf[5]);
+
+    // TODO: This is a stub for now.
+    this->x = normalize(rawX, rawY, rawZ);
+    this->y = normalize(rawY, rawX, rawZ);
+    this->z = normalize(rawZ, rawX, rawY);
+
+    this->xGauss = static_cast<float>(rawX) * lsbRes;
+    this->yGauss = static_cast<float>(rawY) * lsbRes;
+    this->zGauss = static_cast<float>(rawZ) * lsbRes;
+    return true;
+}
+
+float QMC5883L::normalize(int16_t rawX, int16_t rawY, int16_t rawZ){
+    // TODO: This is a stub for now.
+    return 0.0f;
 }

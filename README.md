@@ -10,7 +10,6 @@ Each library is self-contained and follows the PlatformIO library layout, so any
 - **Arduino HAL** — `hal/` wraps Arduino `Wire`, `HardwareSerial`, and timing APIs. Sensor drivers talk to these helpers rather than MCU peripherals directly.
 - **Explicit error handling** — functions that return data use `Result<T, Status>` (see `core`). Functions that only perform an action return `bool`. Failures are never silently swallowed.
 - **No dynamic allocation** — all state is stack or member allocated. No `new`, no `malloc`.
-- **Application logic stays out** — sensor fusion, state machines, UI, and control algorithms belong in project repositories, not here.
 
 ## Repository structure
 
@@ -82,8 +81,9 @@ void setup() {
 }
 
 void loop() {
-    if (mag.isDRDY()) {
-        if (mag.read() == Status::Ok) {
+    Result<bool, Status> dr = mag.isDRDY();
+    if (dr && dr.value) {
+        if (mag.read()) {
             float heading = mag.azimuth(mag.getX(), mag.getY());
         }
     }

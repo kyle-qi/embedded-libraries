@@ -159,12 +159,25 @@ class QMC5883L{
     Result<bool, Status> isOVFL();
 
     /**
-     * @brief Reads all three magnetometer axes and updates internal state.
+     * @brief Read all three magnetometer axes in a single 6-byte burst.
      *
-     * @return Status::Ok if all three I2C reads succeeded, Status::Error otherwise.
-     *         On failure the previously stored values are unchanged.
+     * Guarantees X, Y, and Z come from the same sample. On failure the
+     * previously stored values are left unchanged.
+     *
+     * @return true if the I2C read succeeded, false otherwise.
      */
-    Status read();
+    bool read();
+
+    // TODO: This is a stub for now.
+    /**
+     * @brief Normalizes the raw magnetometer reading to the range [-1, 1].
+     *
+     * @param rawX The raw X reading.
+     * @param rawY The raw Y reading.
+     * @param rawZ The raw Z reading.
+     * @return The normalized reading in the range [-1, 1].
+     */
+    float normalize(int16_t rawX, int16_t rawY, int16_t rawZ);
 
     /**
      * @brief Obtains the most recent magnetometer normalized x reading.
@@ -201,57 +214,6 @@ class QMC5883L{
      * @brief Obtains the most recent magnetometer z reading in Gauss.
      */
     float getZGauss() const { return this->zGauss; }
-
-    /**
-     * @brief Calculates the azimuth/heading from normalized X and Y readings.
-     * 
-     * @param xNorm The normalized X reading of the magnetometer [-1, 1].
-     * @param yNorm The normalized Y reading of the magnetometer [-1, 1].
-     * @return The azimuth/heading in degrees [0, 360).
-     */
-    float azimuth(float xNorm, float yNorm) const;
-
-    /**
-     * @brief Obtain the magnetometer's maximum X axis reading.
-     * 
-     * @return The magnetometer's maximum X axis reading.
-     */
-    int16_t getXMax() const { return this->xMax; }
-
-    /**
-     * @brief Obtain the magnetometer's maximum Y axis reading.
-     * 
-     * @return The magnetometer's maximum Y axis reading.
-     */ 
-    int16_t getYMax() const { return this->yMax; }
-
-    /**
-     * @brief Obtain the magnetometer's maximum Z axis reading.
-     * 
-     * @return The magnetometer's maximum Z axis reading.
-     */    
-    int16_t getZMax() const { return this->zMax; }
-
-    /**
-     * @brief Obtain the magnetometer's minimum X axis reading.
-     * 
-     * @return The magnetometer's minimum X axis reading.
-     */
-    int16_t getXMin() const { return this->xMin; }
-
-    /**
-     * @brief Obtain the magnetometer's minimum Y axis reading.
-     * 
-     * @return The magnetometer's minimum Y axis reading.
-     */
-    int16_t getYMin() const { return this->yMin; }
-
-    /**
-     * @brief Obtain the magnetometer's minimum Z axis reading.
-     * 
-     * @return The magnetometer's minimum Z axis reading.
-     */
-    int16_t getZMin() const { return this->zMin; }
 
     private:
 
@@ -296,15 +258,9 @@ class QMC5883L{
     float lsbRes;
 
     /**
-     * @brief Reads raw magnetometer data from a starting register (little-endian pair),
-     *        scales it, and updates internal state.
-     *
-     * @param reg          Base register address (LSB register).
-     * @param normStorage  Where to store the normalized [-1, 1] reading.
-     * @param gaussStorage Where to store the Gauss reading.
-     * @param maxVal       Calibration maximum for this axis.
-     * @param minVal       Calibration minimum for this axis.
-     * @return Status::Ok if the I2C read succeeded, Status::Error otherwise.
+     * @brief Assemble a little-endian int16 from two raw bytes.
      */
-    Status readAxis(uint8_t reg, float& normStorage, float& gaussStorage, int16_t maxVal, int16_t minVal);
-
+    static int16_t toInt16LE(uint8_t lsb, uint8_t msb) {
+        return static_cast<int16_t>((static_cast<uint16_t>(msb) << 8) | lsb);
+    }
+};

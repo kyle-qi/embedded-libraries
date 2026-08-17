@@ -5,7 +5,7 @@
  * @brief Register map and configuration constants for the QMC5883L driver.
  */
 
-// I2C address — can be overridden before including this header
+// I2C address - can be overridden before including this header
 #ifndef QMC5883L_I2C_ADDR_PIN_LOW
 #define QMC5883L_I2C_ADDR_PIN_LOW 0x2C
 #endif

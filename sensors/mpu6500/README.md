@@ -39,7 +39,8 @@ void setup() {
 }
 
 void loop() {
-    if (mpu.isDRDY()) {
+    Result<bool, Status> dr = mpu.isDRDY();
+    if (dr && dr.value) {
         mpu.readAccel();
         Serial.print("Ax: "); Serial.print(mpu.getAccelX());
         Serial.print(" Ay: "); Serial.print(mpu.getAccelY());

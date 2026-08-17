@@ -2,7 +2,7 @@
 #include "i2c_utils.h"
 #include <math.h>
 
-// Power-on reset defaults: ±250 dps, ±2 g
+// Power-on reset defaults: +/-250 dps, +/-2 g
 static constexpr float kDefaultLsbResGyro  = (250.0f  * (float)M_PI / 180.0f) / 32768.0f;
 static constexpr float kDefaultLsbResAccel = (2.0f    * GRAVITY)              / 32768.0f;
 
@@ -21,7 +21,7 @@ MPU6500::MPU6500(ArduinoI2C& bus, uint8_t address)
 // -----------------------------------------------------------------------------
 
 bool MPU6500::setGyroOffset(int16_t offsetX, int16_t offsetY, int16_t offsetZ) {
-    // Bits [1:0] of each LSB register are reserved — preserve them
+    // Bits [1:0] of each LSB register are reserved - preserve them
     const uint8_t lsbMask = 0b11111100;
     bool ok = true;
     ok &= bus.write(address, MPU6500_XG_OFFSET_H, static_cast<uint8_t>(offsetX >> 8));
@@ -85,7 +85,7 @@ bool MPU6500::setGyroRange(uint16_t range) {
         default: return false;
     }
     bits <<= MPU6500_GYRO_CONFIG_FS_SEL_SHIFT;
-    // Scale factor: (full_scale_dps * π/180) / 32768 → rad/s per LSB
+    // Scale factor: (full_scale_dps * pi/180) / 32768 -> rad/s per LSB
     lsbResGyro = (static_cast<float>(range) * (float)M_PI / 180.0f) / 32768.0f;
     return i2c::writeMasked(bus, address, MPU6500_GYRO_CONFIG, bits,
                             MPU6500_GYRO_CONFIG_FS_SEL_MASK);
@@ -126,7 +126,7 @@ bool MPU6500::setAccelRange(uint8_t range) {
         default: return false;
     }
     bits <<= MPU6500_ACCEL_CONFIG_FS_SEL_SHIFT;
-    // Scale factor: (full_scale_g * standard_gravity) / 32768 → m/s² per LSB
+    // Scale factor: (full_scale_g * standard_gravity) / 32768 -> m/s^2 per LSB
     lsbResAccel = (static_cast<float>(range) * GRAVITY) / 32768.0f;
     return i2c::writeMasked(bus, address, MPU6500_ACCEL_CONFIG, bits,
                             MPU6500_ACCEL_CONFIG_FS_SEL_MASK);
@@ -144,7 +144,7 @@ bool MPU6500::resetRegisters() {
 bool MPU6500::configureDefaults() {
     bool ok = true;
     ok &= resetRegisters();
-    ok &= wake();  // device enters sleep after reset — wake before configuring
+    ok &= wake();  // device enters sleep after reset - wake before configuring
     ok &= setSampleRateDivider(MPU6500_SMPLRT_DIV_9);
     ok &= setFIFOMode(MPU6500_FIFO_OVERWRITE_OLDEST);
     ok &= setFSync(EXT_SOURCE_DISABLE);
@@ -201,7 +201,7 @@ Result<bool, Status> MPU6500::isDRDY() {
 }
 
 // -----------------------------------------------------------------------------
-// Sensor reads — individual axes
+// Sensor reads - individual axes
 // -----------------------------------------------------------------------------
 
 Result<int16_t, Status> MPU6500::readGyroX() {
@@ -229,7 +229,7 @@ Result<int16_t, Status> MPU6500::readTemp() {
 }
 
 // -----------------------------------------------------------------------------
-// Sensor reads — burst
+// Sensor reads - burst
 // -----------------------------------------------------------------------------
 
 bool MPU6500::readGyro() {
@@ -257,6 +257,25 @@ bool MPU6500::readAccel() {
     xAccel = static_cast<float>(rawX) * lsbResAccel;
     yAccel = static_cast<float>(rawY) * lsbResAccel;
     zAccel = static_cast<float>(rawZ) * lsbResAccel;
+    return true;
+}
+
+bool MPU6500::read() {
+    uint8_t buf[14];
+    if (!bus.readBytes(address, MPU6500_ACCEL_XOUT_H, buf, 14)) return false;
+
+    xAccel = static_cast<float>(toInt16BE(buf[0], buf[1])) * lsbResAccel;
+    yAccel = static_cast<float>(toInt16BE(buf[2], buf[3])) * lsbResAccel;
+    zAccel = static_cast<float>(toInt16BE(buf[4], buf[5])) * lsbResAccel;
+
+    const int16_t rawTemp = toInt16BE(buf[6], buf[7]);
+    temp = (static_cast<float>(rawTemp) - MPU6500_TEMP_OFFSET)
+           / MPU6500_TEMP_SENSITIVITY
+           + MPU6500_TEMP_ROOM_OFFSET;
+
+    xGyro = static_cast<float>(toInt16BE(buf[8],  buf[9]))  * lsbResGyro;
+    yGyro = static_cast<float>(toInt16BE(buf[10], buf[11])) * lsbResGyro;
+    zGyro = static_cast<float>(toInt16BE(buf[12], buf[13])) * lsbResGyro;
     return true;
 }
 

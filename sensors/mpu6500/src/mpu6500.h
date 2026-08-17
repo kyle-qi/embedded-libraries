@@ -17,7 +17,7 @@ public:
      * @brief Construct an MPU6500 driver.
      *
      * LSB resolutions are initialised to power-on reset defaults:
-     * ±250 dps for the gyroscope and ±2 g for the accelerometer.
+     * +/-250 dps for the gyroscope and +/-2 g for the accelerometer.
      * Call setGyroRange() / setAccelRange() to change them.
      *
      * @param bus       Reference to the I2C bus.
@@ -45,7 +45,7 @@ public:
      * Output rate = internal gyro rate / (1 + divider).
      * Use MPU6500_SMPLRT_DIV_* macros for common rates.
      *
-     * @param divider Value written to SMPLRT_DIV [0–255].
+     * @param divider Value written to SMPLRT_DIV [0-255].
      * @return true on success.
      */
     bool setSampleRateDivider(uint8_t divider);
@@ -132,7 +132,7 @@ public:
     /**
      * @brief Set the accelerometer full-scale range.
      *
-     * Also updates the internal LSB-to-m/s² scale factor.
+     * Also updates the internal LSB-to-m/s^2 scale factor.
      *
      * @param range MPU6500_ACCEL_FS_*G macro.
      * @return true on success.
@@ -156,8 +156,8 @@ public:
     /**
      * @brief Apply the accel-only default profile and wake the device.
      *
-     * Sequence: reset → wake → sample rate → FIFO mode → FSync off →
-     * accel LPF (44 Hz) → accel range (±2 g) → gyros off → temp off.
+     * Sequence: reset -> wake -> sample rate -> FIFO mode -> FSync off ->
+     * accel LPF (44 Hz) -> accel range (+/-2 g) -> gyros off -> temp off.
      *
      * @return true if every step succeeded.
      */
@@ -210,7 +210,7 @@ public:
     Result<bool, Status> isDRDY();
 
     // -------------------------------------------------------------------------
-    // Sensor reads — individual axes
+    // Sensor reads - individual axes
     // -------------------------------------------------------------------------
 
     /** @return Raw 16-bit gyroscope X reading (and updates getGyroX()). */
@@ -231,7 +231,7 @@ public:
     Result<int16_t, Status> readTemp();
 
     // -------------------------------------------------------------------------
-    // Sensor reads — burst (all axes in one I2C transaction)
+    // Sensor reads - burst (all axes in one I2C transaction)
     // -------------------------------------------------------------------------
 
     /**
@@ -256,8 +256,21 @@ public:
      */
     bool readAccel();
 
+    /**
+     * @brief Read accelerometer, temperature, and gyroscope in one 14-byte burst.
+     *
+     * The output registers are contiguous (accel, temp, gyro), so a single
+     * transaction is required to get accel and gyro from the same sample.
+     * Temperature is updated as well because it sits between the two blocks.
+     * Prefer this over calling readAccel() and readGyro() separately.
+     *
+     * @return true if the burst read succeeded. On failure the stored values
+     *         are left unchanged.
+     */
+    bool read();
+
     // -------------------------------------------------------------------------
-    // Getters — scaled values
+    // Getters - scaled values
     // -------------------------------------------------------------------------
 
     /** @return Most recent gyroscope X reading in rad/s. */
@@ -267,14 +280,14 @@ public:
     /** @return Most recent gyroscope Z reading in rad/s. */
     float getGyroZ() const { return zGyro; }
 
-    /** @return Most recent accelerometer X reading in m/s². */
+    /** @return Most recent accelerometer X reading in m/s^2. */
     float getAccelX() const { return xAccel; }
-    /** @return Most recent accelerometer Y reading in m/s². */
+    /** @return Most recent accelerometer Y reading in m/s^2. */
     float getAccelY() const { return yAccel; }
-    /** @return Most recent accelerometer Z reading in m/s². */
+    /** @return Most recent accelerometer Z reading in m/s^2. */
     float getAccelZ() const { return zAccel; }
 
-    /** @return Most recent temperature reading in °C. */
+    /** @return Most recent temperature reading in deg C. */
     float getTemp() const { return temp; }
 
     // -------------------------------------------------------------------------
@@ -298,12 +311,12 @@ private:
 
     // Scaled outputs
     float xGyro,  yGyro,  zGyro;   ///< rad/s
-    float xAccel, yAccel, zAccel;  ///< m/s²
-    float temp;                    ///< °C
+    float xAccel, yAccel, zAccel;  ///< m/s^2
+    float temp;                    ///< deg C
 
-    // LSB scale factors — kept in sync with setGyroRange / setAccelRange
+    // LSB scale factors - kept in sync with setGyroRange / setAccelRange
     float lsbResGyro;   ///< rad/s per LSB
-    float lsbResAccel;  ///< m/s² per LSB
+    float lsbResAccel;  ///< m/s^2 per LSB
 
     enum class SensorChannel : uint8_t { Gyro, Accel, Temp };
 
