@@ -4,44 +4,70 @@
 
 Shared utilities used across the embedded libraries. Header-only, no dependencies, C++11 compatible.
 
+### `Status` enum (result.h)
+
+The error type used as the `E` parameter in all `Result` instantiations across the repo.
+
+```cpp
+enum class Status : uint8_t {
+    Ok    = 0,
+    Error = 1,
+};
+```
+
+Currently thin by design. Extend with richer values (e.g. `BusNack`, `Timeout`, `InvalidArg`) when finer-grained error reporting is needed — no call-site shape changes required.
+
 ### `Result<T, E>` (result.h)
 
-A zero-overhead wrapper pairing a returned `value` with a `status`. No heap, no exceptions, no RTTI.
+A zero-overhead struct pairing a returned `value` with a `status`. No heap, no exceptions, no RTTI.
 
-- `value` — the returned value, meaningful only when the operation succeeded.
-- `status` — the operation status. For `E = bool`, `true` means success.
-- `operator bool()` / `ok()` — success check.
+- `value` — the returned value, meaningful only when `status == Status::Ok`.
+- `status` — the operation status (`Status::Ok` or `Status::Error`).
+- `operator bool()` / `ok()` — true when `status == Status::Ok`.
 
 ## Conventions
 
-- Functions that return **data that can fail** return `Result<T, bool>`.
-- Functions that only **perform an action** (setters, configuration) return plain `bool`.
-- Predicate functions whose answer is itself a `bool` (e.g. `isDRDY()`) return `bool` directly. A hardware read failure maps to `false`.
-
-The `E` parameter is `bool` for now. It is kept generic so it can later be replaced by a scoped enum for richer error reporting without changing call-site shape.
+- Functions returning **data that may fail** → `Result<T, Status>`
+- Functions returning a **flag that may fail** (predicates like `isDRDY`) → `Result<bool, Status>`:
+  - `!r` → bus/transport error (distinct from "flag is false")
+  - `r.value` → the actual flag (only valid when `r.ok()`)
+- Functions that only **perform an action** (setters, config) → plain `bool`
 
 ## Usage Example
 
 ```cpp
 #include "result.h"
 
-Result<uint8_t, bool> r = bus.read(addr, reg);
+// Reading data:
+Result<uint8_t, Status> r = bus.read(addr, reg);
 if (!r) {
-    // handle failure
-    return false;
+    // Status::Error — handle bus failure
+    return;
 }
-uint8_t value = r.value;
+uint8_t val = r.value; // safe to use
+```
+
+### Reading a predicate flag
+
+```cpp
+Result<bool, Status> dr = sensor.isDRDY();
+if (!dr) {
+    // bus error — explicitly distinct from "not ready"
+    return;
+}
+if (dr.value) {
+    // data is actually ready
+}
 ```
 
 ### Producing a Result
 
 ```cpp
-Result<int16_t, bool> readAxis() {
+Result<int16_t, Status> readAxis() {
     uint8_t buf[2];
     if (!bus.readBytes(addr, reg, buf, 2)) {
-        return {0, false};   // failure — value is a placeholder
+        return {0, Status::Error};
     }
-    int16_t val = assemble(buf);
-    return {val, true};      // success
+    return {assemble(buf), Status::Ok};
 }
 ```

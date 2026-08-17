@@ -6,7 +6,7 @@
 static constexpr float kDefaultLsbResGyro  = (250.0f  * (float)M_PI / 180.0f) / 32768.0f;
 static constexpr float kDefaultLsbResAccel = (2.0f    * GRAVITY)              / 32768.0f;
 
-MPU6500::MPU6500(II2C& bus, uint8_t address)
+MPU6500::MPU6500(ArduinoI2C& bus, uint8_t address)
     : bus(bus)
     , address(address)
     , xGyro(0.0f),  yGyro(0.0f),  zGyro(0.0f)
@@ -192,39 +192,39 @@ bool MPU6500::enableGyro(bool isEnable) {
 // Data ready
 // -----------------------------------------------------------------------------
 
-bool MPU6500::isDRDY() {
-    Result<uint8_t, bool> status = bus.read(address, MPU6500_INT_STATUS);
+Result<bool, Status> MPU6500::isDRDY() {
+    Result<uint8_t, Status> status = bus.read(address, MPU6500_INT_STATUS);
     if (!status) {
-        return false; // treat a failed read as "not ready"
+        return {false, Status::Error};
     }
-    return (status.value & (1u << MPU6500_INT_DATA_RDY_BIT)) != 0;
+    return {(status.value & (1u << MPU6500_INT_DATA_RDY_BIT)) != 0, Status::Ok};
 }
 
 // -----------------------------------------------------------------------------
 // Sensor reads — individual axes
 // -----------------------------------------------------------------------------
 
-Result<int16_t, bool> MPU6500::readGyroX() {
+Result<int16_t, Status> MPU6500::readGyroX() {
     return readSensor(MPU6500_GYRO_XOUT_H, xGyro, SensorChannel::Gyro);
 }
-Result<int16_t, bool> MPU6500::readGyroY() {
+Result<int16_t, Status> MPU6500::readGyroY() {
     return readSensor(MPU6500_GYRO_YOUT_H, yGyro, SensorChannel::Gyro);
 }
-Result<int16_t, bool> MPU6500::readGyroZ() {
+Result<int16_t, Status> MPU6500::readGyroZ() {
     return readSensor(MPU6500_GYRO_ZOUT_H, zGyro, SensorChannel::Gyro);
 }
 
-Result<int16_t, bool> MPU6500::readAccelX() {
+Result<int16_t, Status> MPU6500::readAccelX() {
     return readSensor(MPU6500_ACCEL_XOUT_H, xAccel, SensorChannel::Accel);
 }
-Result<int16_t, bool> MPU6500::readAccelY() {
+Result<int16_t, Status> MPU6500::readAccelY() {
     return readSensor(MPU6500_ACCEL_YOUT_H, yAccel, SensorChannel::Accel);
 }
-Result<int16_t, bool> MPU6500::readAccelZ() {
+Result<int16_t, Status> MPU6500::readAccelZ() {
     return readSensor(MPU6500_ACCEL_ZOUT_H, zAccel, SensorChannel::Accel);
 }
 
-Result<int16_t, bool> MPU6500::readTemp() {
+Result<int16_t, Status> MPU6500::readTemp() {
     return readSensor(MPU6500_TEMP_OUT_H, temp, SensorChannel::Temp);
 }
 
@@ -264,7 +264,7 @@ bool MPU6500::readAccel() {
 // Identity
 // -----------------------------------------------------------------------------
 
-Result<uint8_t, bool> MPU6500::whoAmI() {
+Result<uint8_t, Status> MPU6500::whoAmI() {
     return bus.read(address, MPU6500_WHO_AM_I);
 }
 
@@ -272,11 +272,11 @@ Result<uint8_t, bool> MPU6500::whoAmI() {
 // Private helpers
 // -----------------------------------------------------------------------------
 
-Result<int16_t, bool> MPU6500::readSensor(uint8_t reg, float& scaledOut,
-                                          SensorChannel channel) {
+Result<int16_t, Status> MPU6500::readSensor(uint8_t reg, float& scaledOut,
+                                           SensorChannel channel) {
     uint8_t buf[2];
     if (!bus.readBytes(address, reg, buf, 2)) {
-        return {0, false}; // leave stored scaled value unchanged on bus failure
+        return {0, Status::Error};
     }
 
     const int16_t val = toInt16BE(buf[0], buf[1]);
@@ -289,11 +289,10 @@ Result<int16_t, bool> MPU6500::readSensor(uint8_t reg, float& scaledOut,
             scaledOut = static_cast<float>(val) * lsbResAccel;
             break;
         case SensorChannel::Temp:
-            // Datasheet: T(°C) = (TEMP_OUT - room_offset) / sensitivity + 21
             scaledOut = (static_cast<float>(val) - MPU6500_TEMP_OFFSET)
                         / MPU6500_TEMP_SENSITIVITY
                         + MPU6500_TEMP_ROOM_OFFSET;
             break;
     }
-    return {val, true};
+    return {val, Status::Ok};
 }

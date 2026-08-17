@@ -1,20 +1,37 @@
 #pragma once
 
 #include <stdint.h>
+#include <Wire.h>
 #include "result.h"
 
 /**
  * @file i2c.h
- * @brief Platform-agnostic abstract I2C interface.
+ * @brief Arduino Wire-backed I2C helper for register-based devices.
  *
- * Defines the minimum set of operations a hardware I2C implementation
- * must provide. Sensor drivers depend only on this header and i2c_utils.h.
- * Concrete implementations (e.g. ArduinoI2C) are injected at construction
- * time, keeping driver code free of any HAL or platform dependencies.
+ * Instantiate this once in your sketch and pass it by reference to every
+ * sensor driver constructor.
+ *
+ * @code
+ * #include "i2c.h"
+ * #include "mpu6500.h"
+ *
+ * ArduinoI2C bus;
+ * MPU6500    imu(bus);
+ * @endcode
  */
-class II2C {
+class ArduinoI2C {
 public:
-    virtual ~II2C() = default;
+    /**
+     * @brief Initializes the I2C bus.
+     *
+     * @param sdaPin    SDA pin number.
+     * @param sclPin    SCL pin number.
+     * @param frequency Bus clock frequency in Hz.
+     * @return true if initialization succeeded, false otherwise.
+     */
+    bool begin(int sdaPin, int sclPin, uint32_t frequency) {
+        return Wire.begin(sdaPin, sclPin, frequency);
+    }
 
     /**
      * @brief Write a byte to a device register.
@@ -24,7 +41,12 @@ public:
      * @param data Byte to write.
      * @return true on success, false otherwise.
      */
-    virtual bool write(uint8_t addr, uint8_t reg, uint8_t data) = 0;
+    bool write(uint8_t addr, uint8_t reg, uint8_t data) {
+        Wire.beginTransmission(addr);
+        Wire.write(reg);
+        Wire.write(data);
+        return Wire.endTransmission() == 0;
+    }
 
     /**
      * @brief Write @p len consecutive bytes from @p buf starting at @p reg.
@@ -39,17 +61,38 @@ public:
      * @param len  Number of bytes to write.
      * @return true on success, false otherwise.
      */
-    virtual bool writeBytes(uint8_t addr, uint8_t reg, const uint8_t* buf, uint8_t len) = 0;
+    bool writeBytes(uint8_t addr, uint8_t reg, const uint8_t* buf, uint8_t len) {
+        Wire.beginTransmission(addr);
+        Wire.write(reg);
+        for (uint8_t i = 0; i < len; ++i) {
+            Wire.write(buf[i]);
+        }
+        return Wire.endTransmission() == 0;
+    }
 
     /**
      * @brief Read a byte from a device register.
      *
      * @param addr 7-bit I2C device address.
      * @param reg  Target register address.
-     * @return Result carrying the byte read and a success status. On failure
-     *         the value is unspecified and the status is false.
+     * @return Result carrying the byte read and a Status. On failure
+     *         the value is unspecified and the status is Status::Error.
      */
-    virtual Result<uint8_t, bool> read(uint8_t addr, uint8_t reg) = 0;
+    Result<uint8_t, Status> read(uint8_t addr, uint8_t reg) {
+        Wire.beginTransmission(addr);
+        Wire.write(reg);
+        if (Wire.endTransmission(false) != 0) {
+            return {0, Status::Error};
+        }
+        if (Wire.requestFrom(addr, static_cast<uint8_t>(1)) != 1) {
+            return {0, Status::Error};
+        }
+        int value = Wire.read();
+        if (value < 0) {
+            return {0, Status::Error};
+        }
+        return {static_cast<uint8_t>(value), Status::Ok};
+    }
 
     /**
      * @brief Read @p len consecutive bytes starting at @p reg into @p buf.
@@ -64,6 +107,17 @@ public:
      * @param len  Number of bytes to read.
      * @return true on success, false otherwise.
      */
-    virtual bool readBytes(uint8_t addr, uint8_t reg, uint8_t* buf, uint8_t len) = 0;
-};
+    bool readBytes(uint8_t addr, uint8_t reg, uint8_t* buf, uint8_t len) {
+        Wire.beginTransmission(addr);
+        Wire.write(reg);
+        if (Wire.endTransmission(false) != 0) return false;
 
+        Wire.requestFrom(addr, len);
+        if (Wire.available() < len) return false;
+
+        for (uint8_t i = 0; i < len; ++i) {
+            buf[i] = Wire.read();
+        }
+        return true;
+    }
+};

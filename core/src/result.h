@@ -6,29 +6,58 @@
  * @file result.h
  * @brief Lightweight value-or-status wrapper for error handling.
  *
- * Result pairs a returned @p value with a @p status that reports whether the
- * operation succeeded. It is a zero-overhead aggregate: no heap, no
- * exceptions, no RTTI, and C++11 compatible — suitable for constrained
- * embedded targets.
+ * Provides two types:
  *
- * The second template parameter is the status type. For now it is expected to
- * be `bool` (true = success). It is left generic so it can later be replaced by
- * a scoped enum for richer error reporting without changing call-site shape.
+ * - `Status` — a scoped enum used as the error type in all `Result`
+ *   instantiations across this repo. Currently has two values (`Ok` and
+ *   `Error`) for a thin but unambiguous implementation. Replace the enum
+ *   values with richer codes (e.g. `BusNack`, `Timeout`) when needed
+ *   without changing any call-site shape.
  *
- * Usage:
+ * - `Result<T, E>` — pairs a returned `value` with a `status`. Zero
+ *   overhead: no heap, no exceptions, no RTTI, C++11 compatible.
+ *
+ * ## Conventions
+ *
+ * - Functions returning **data that may fail** → `Result<T, Status>`
+ * - Functions returning a **flag that may fail** (predicates like `isDRDY`)
+ *   → `Result<bool, Status>`:
+ *     - `!r` or `r.status != Status::Ok` → transport/hardware error
+ *     - `r.value` → the actual flag value (only meaningful when `r.ok()`)
+ * - Functions that only **perform an action** (setters, config) → plain `bool`
+ *
+ * ## Usage
+ *
  * @code
- * Result<uint8_t, bool> r = bus.read(addr, reg);
- * if (!r) {
- *     // handle failure
- *     return false;
- * }
- * uint8_t value = r.value;
- * @endcode
+ * // Reading data:
+ * Result<uint8_t, Status> r = bus.read(addr, reg);
+ * if (!r) { return; }          // bus error
+ * uint8_t val = r.value;       // safe to use
  *
- * Functions that return data which may fail should return a Result. Functions
- * that only perform an action (setters, configuration) should return a plain
- * status (bool). Predicate functions whose answer is itself a bool should
- * return bool directly to avoid ambiguity.
+ * // Reading a flag:
+ * Result<bool, Status> dr = sensor.isDRDY();
+ * if (!dr) { return; }         // bus error, not "not ready"
+ * if (dr.value) { ... }        // data is ready
+ * @endcode
+ */
+
+/**
+ * @brief Operation status. Used as the `E` parameter in all `Result` types.
+ *
+ * Extend with additional values (e.g. `BusNack`, `Timeout`, `InvalidArg`)
+ * when finer-grained error reporting is needed — no call-site shape changes
+ * required.
+ */
+enum class Status : uint8_t {
+    Ok    = 0,  ///< Operation completed successfully.
+    Error = 1,  ///< Operation failed. Details TBD.
+};
+
+/**
+ * @brief Lightweight value-or-status aggregate.
+ *
+ * @tparam T  The value type. Only meaningful when `status == Status::Ok`.
+ * @tparam E  The status type (use `Status`).
  */
 template <typename T, typename E>
 struct Result {
@@ -38,21 +67,21 @@ struct Result {
     T value;
 
     /**
-     * @brief The operation status. For E = bool, true means success.
+     * @brief The operation status.
      */
     E status;
 
     /**
-     * @brief Contextual conversion to bool for `if (result)` checks.
+     * @brief Contextual conversion to bool — true if the operation succeeded.
      *
-     * @return true if the operation succeeded.
+     * Allows `if (result)` and `if (!result)` idioms.
      */
-    explicit operator bool() const { return static_cast<bool>(status); }
+    explicit operator bool() const { return status == static_cast<E>(0); }
 
     /**
      * @brief Explicit success query.
      *
      * @return true if the operation succeeded.
      */
-    bool ok() const { return static_cast<bool>(status); }
+    bool ok() const { return static_cast<bool>(*this); }
 };

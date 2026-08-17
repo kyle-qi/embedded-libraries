@@ -14,7 +14,7 @@ static constexpr float kLsbResTable[4] = {
 // but we initialise to match configureDefaults()).
 static constexpr float kDefaultLsbRes = kLsbResTable[2]; // Gauss8
 
-QMC5883L::QMC5883L(II2C& bus, IClock& clock, uint8_t myAddress)
+QMC5883L::QMC5883L(ArduinoI2C& bus, ArduinoClock& clock, uint8_t myAddress)
     : bus(bus)
     , clock(clock)
     , address(myAddress)
@@ -26,7 +26,7 @@ QMC5883L::QMC5883L(II2C& bus, IClock& clock, uint8_t myAddress)
 {}
 
 bool QMC5883L::setMode(Mode mode){
-    Result<uint8_t, bool> current = bus.read(this->address, QMC5883L_CTRLA_REG);
+    Result<uint8_t, Status> current = bus.read(this->address, QMC5883L_CTRLA_REG);
     if (!current) {
         return false;
     }
@@ -96,28 +96,28 @@ bool QMC5883L::configureDefaults(){
     return true;
 }
 
-bool QMC5883L::isDRDY(){
-    Result<uint8_t, bool> status = bus.read(this->address, QMC5883L_STATUS_REG);
+Result<bool, Status> QMC5883L::isDRDY(){
+    Result<uint8_t, Status> status = bus.read(this->address, QMC5883L_STATUS_REG);
     if (!status) {
-        return false; // treat a failed read as "not ready"
+        return {false, Status::Error};
     }
-    return (status.value & 0b01) != 0;
+    return {(status.value & 0b01) != 0, Status::Ok};
 }
 
-bool QMC5883L::isOVFL(){
-    Result<uint8_t, bool> status = bus.read(this->address, QMC5883L_STATUS_REG);
+Result<bool, Status> QMC5883L::isOVFL(){
+    Result<uint8_t, Status> status = bus.read(this->address, QMC5883L_STATUS_REG);
     if (!status) {
-        return false;
+        return {false, Status::Error};
     }
-    return (status.value & 0b10) != 0;
+    return {(status.value & 0b10) != 0, Status::Ok};
 }
 
-bool QMC5883L::read(){
+Status QMC5883L::read(){
     bool ok = true;
-    ok &= readAxis(QMC5883L_XLSB_REG, this->x, this->xGauss, this->xMin, this->xMax);
-    ok &= readAxis(QMC5883L_YLSB_REG, this->y, this->yGauss, this->yMin, this->yMax);
-    ok &= readAxis(QMC5883L_ZLSB_REG, this->z, this->zGauss, this->zMin, this->zMax);
-    return ok;
+    ok &= readAxis(QMC5883L_XLSB_REG, this->x, this->xGauss, this->xMin, this->xMax) == Status::Ok;
+    ok &= readAxis(QMC5883L_YLSB_REG, this->y, this->yGauss, this->yMin, this->yMax) == Status::Ok;
+    ok &= readAxis(QMC5883L_ZLSB_REG, this->z, this->zGauss, this->zMin, this->zMax) == Status::Ok;
+    return ok ? Status::Ok : Status::Error;
 }
 
 float QMC5883L::azimuth(float xNorm, float yNorm) const {
@@ -130,14 +130,14 @@ float QMC5883L::azimuth(float xNorm, float yNorm) const {
 // Private helpers
 // -----------------------------------------------------------------------------
 
-bool QMC5883L::readAxis(uint8_t reg, float& normStorage, float& gaussStorage, int16_t maxVal, int16_t minVal){
+Status QMC5883L::readAxis(uint8_t reg, float& normStorage, float& gaussStorage, int16_t maxVal, int16_t minVal){
     uint8_t buf[2];
     if (!bus.readBytes(this->address, reg, buf, 2)) {
-        return false;
+        return Status::Error;
     }
     // QMC5883L output registers are little-endian: LSB at reg, MSB at reg+1
     int16_t val = static_cast<int16_t>((static_cast<uint16_t>(buf[1]) << 8) | buf[0]);
     normStorage  = normalize(val, maxVal, minVal);
     gaussStorage = static_cast<float>(val) * lsbRes;
-    return true;
+    return Status::Ok;
 }

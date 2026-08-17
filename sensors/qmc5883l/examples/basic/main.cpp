@@ -1,6 +1,7 @@
 // Basic QMC5883L example: configure the magnetometer and print readings.
 #include <Arduino.h>
-#include "i2c_arduino.h"
+#include "i2c.h"
+#include "clock.h"
 #include "qmc5883l.h"
 
 // I2C pin / clock configuration
@@ -8,8 +9,9 @@
 #define SCL_PIN 22
 #define I2C_FREQ 100000
 
-ArduinoI2C bus;
-QMC5883L qmc5883l(bus);
+ArduinoI2C   bus;
+ArduinoClock clk;
+QMC5883L     qmc5883l(bus, clk);
 
 void setup() {
     Serial.begin(115200);

@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-Neo6M::Neo6M(ISerial& serial)
+Neo6M::Neo6M(ArduinoSerial& serial)
     : serial(serial)
     , hour(0), minute(0), second(0)
     , latitude(0.0f), longitude(0.0f)
@@ -24,7 +24,7 @@ bool Neo6M::read() {
     bool parsed = false;
 
     while (serial.available()) {
-        Result<uint8_t, bool> r = serial.read();
+        Result<uint8_t, Status> r = serial.read();
         if (!r) {
             break;
         }

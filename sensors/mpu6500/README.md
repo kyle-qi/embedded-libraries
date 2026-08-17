@@ -17,13 +17,13 @@ register-level configuration and scaled readings for all three sensor axes.
 
 ## Dependencies
 
-- [`i2c_handler`](../i2c_handler) — provides `II2C` interface and `ArduinoI2C` implementation.
+- [`i2c_handler`](../../hal/i2c) — provides `ArduinoI2C`.
 
 ## Usage Example
 
 ```cpp
 #include <Arduino.h>
-#include "arduino_i2c.h"
+#include "i2c.h"
 #include "mpu6500.h"
 
 ArduinoI2C bus;
@@ -51,6 +51,4 @@ void loop() {
 
 ## Supported Platforms
 
-Any platform with an `II2C`-compatible implementation. The `ArduinoI2C`
-implementation supports ESP32, STM32, Arduino AVR, and any other
-Arduino-framework target with `Wire`.
+ESP32, STM32, Arduino AVR, and any other Arduino-framework target with `Wire`.

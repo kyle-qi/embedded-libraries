@@ -1,6 +1,6 @@
 // Basic ArduinoI2C example: initialize the I2C bus and scan for devices.
 #include <Arduino.h>
-#include "i2c_arduino.h"
+#include "i2c.h"
 
 // I2C pin / clock configuration
 #define SDA_PIN 21
@@ -32,7 +32,7 @@ void setup() {
 
 void loop() {
     // Example: read register 0x00 from a device at address 0x68
-    Result<uint8_t, bool> reg = bus.read(0x68, 0x00);
+    Result<uint8_t, Status> reg = bus.read(0x68, 0x00);
     if (reg) {
         Serial.print("Register 0x00 = 0x");
         Serial.println(reg.value, HEX);

@@ -10,8 +10,7 @@
  * @file neo6m.h
  * @brief Driver for the u-blox NEO-6M GPS module.
  *
- * Inject an ISerial implementation at construction time. The driver is
- * platform-agnostic and has no dependency on Arduino or any specific HAL.
+ * Inject an ArduinoSerial instance at construction time.
  * Serial port initialization (baud rate, pins) is the caller's responsibility
  * before passing the port to this driver.
  */
@@ -24,9 +23,9 @@ public:
      * The serial port must already be initialized (begin() called) before
      * any read operations are performed.
      *
-     * @param serial Reference to the platform serial implementation.
+     * @param serial Reference to the serial port.
      */
-    explicit Neo6M(ISerial& serial);
+    explicit Neo6M(ArduinoSerial& serial);
 
     /**
      * @brief Reads available NMEA sentences and updates internal state.
@@ -107,9 +106,9 @@ public:
 private:
 
     /**
-     * @brief Reference to the platform serial implementation.
+     * @brief Reference to the serial port.
      */
-    ISerial& serial;
+    ArduinoSerial& serial;
 
     // Time (UTC)
     uint8_t hour, minute, second;

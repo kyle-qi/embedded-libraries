@@ -1,21 +1,26 @@
 #pragma once
 
 #include <stdint.h>
+#include <Arduino.h>
 
 /**
  * @file clock.h
- * @brief Platform-agnostic abstract clock interface.
+ * @brief Arduino-backed timing and delay helper.
  *
- * Provides timing and delay services to HAL and sensor drivers without
- * coupling them to any platform (Arduino, STM32 HAL, POSIX, etc.).
+ * Wraps the Arduino runtime functions millis(), micros(), delay(), and
+ * delayMicroseconds(). Instantiate once and inject into any driver that
+ * needs timing.
  *
- * Inject a concrete implementation (e.g. ArduinoClock) at construction
- * time wherever timing is needed.
+ * @code
+ * #include "clock.h"
+ * #include "qmc5883l.h"
+ *
+ * ArduinoClock clock;
+ * QMC5883L mag(bus, clock);
+ * @endcode
  */
-class IClock {
+class ArduinoClock {
 public:
-    virtual ~IClock() = default;
-
     /**
      * @brief Return the number of milliseconds since the system started.
      *
@@ -23,7 +28,9 @@ public:
      *
      * @return Elapsed milliseconds as an unsigned 32-bit value.
      */
-    virtual uint32_t millis() = 0;
+    uint32_t millis() {
+        return ::millis();
+    }
 
     /**
      * @brief Return the number of microseconds since the system started.
@@ -32,7 +39,9 @@ public:
      *
      * @return Elapsed microseconds as an unsigned 32-bit value.
      */
-    virtual uint32_t micros() = 0;
+    uint32_t micros() {
+        return ::micros();
+    }
 
     /**
      * @brief Block execution for at least @p ms milliseconds.
@@ -43,7 +52,9 @@ public:
      *
      * @param ms Number of milliseconds to delay.
      */
-    virtual void delayMs(uint32_t ms) = 0;
+    void delayMs(uint32_t ms) {
+        ::delay(ms);
+    }
 
     /**
      * @brief Block execution for at least @p us microseconds.
@@ -52,7 +63,9 @@ public:
      *
      * @param us Number of microseconds to delay.
      */
-    virtual void delayUs(uint32_t us) = 0;
+    void delayUs(uint32_t us) {
+        ::delayMicroseconds(us);
+    }
 
     /**
      * @brief Return true once @p intervalMs has elapsed since @p lastMs.
@@ -72,5 +85,8 @@ public:
      * @param intervalMs Desired interval in milliseconds.
      * @return true if the interval has elapsed, false otherwise.
      */
-    virtual bool elapsed(uint32_t lastMs, uint32_t intervalMs) = 0;
+    bool elapsed(uint32_t lastMs, uint32_t intervalMs) {
+        // Subtraction handles 32-bit rollover correctly without branching
+        return (::millis() - lastMs) >= intervalMs;
+    }
 };

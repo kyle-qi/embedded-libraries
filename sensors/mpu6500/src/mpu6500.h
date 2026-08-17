@@ -8,8 +8,7 @@
  * @file mpu6500.h
  * @brief Driver for the MPU6500 6-axis IMU (accelerometer + gyroscope).
  *
- * Inject an II2C implementation at construction time. The driver is
- * platform-agnostic and has no dependency on Arduino or any specific HAL.
+ * Inject an ArduinoI2C instance at construction time.
  */
 class MPU6500 {
 public:
@@ -21,10 +20,10 @@ public:
      * ±250 dps for the gyroscope and ±2 g for the accelerometer.
      * Call setGyroRange() / setAccelRange() to change them.
      *
-     * @param bus       Reference to the platform I2C implementation.
+     * @param bus       Reference to the I2C bus.
      * @param address   7-bit I2C address (default MPU6500_I2C_ADDR_AD0_LOW).
      */
-    explicit MPU6500(II2C& bus, uint8_t address = MPU6500_I2C_ADDR_AD0_LOW);
+    explicit MPU6500(ArduinoI2C& bus, uint8_t address = MPU6500_I2C_ADDR_AD0_LOW);
 
     // -------------------------------------------------------------------------
     // Configuration
@@ -203,31 +202,33 @@ public:
 
     /**
      * @brief Check whether the sensor has a new sample ready.
-     * @return true if the DATA_RDY interrupt flag is set. A failed read
-     *         returns false.
+     *
+     * @return Result where `value` is the DRDY flag and `status` indicates
+     *         whether the I2C read succeeded. Check `!r` for bus errors
+     *         before using `r.value`.
      */
-    bool isDRDY();
+    Result<bool, Status> isDRDY();
 
     // -------------------------------------------------------------------------
     // Sensor reads — individual axes
     // -------------------------------------------------------------------------
 
     /** @return Raw 16-bit gyroscope X reading (and updates getGyroX()). */
-    Result<int16_t, bool> readGyroX();
+    Result<int16_t, Status> readGyroX();
     /** @return Raw 16-bit gyroscope Y reading (and updates getGyroY()). */
-    Result<int16_t, bool> readGyroY();
+    Result<int16_t, Status> readGyroY();
     /** @return Raw 16-bit gyroscope Z reading (and updates getGyroZ()). */
-    Result<int16_t, bool> readGyroZ();
+    Result<int16_t, Status> readGyroZ();
 
     /** @return Raw 16-bit accelerometer X reading (and updates getAccelX()). */
-    Result<int16_t, bool> readAccelX();
+    Result<int16_t, Status> readAccelX();
     /** @return Raw 16-bit accelerometer Y reading (and updates getAccelY()). */
-    Result<int16_t, bool> readAccelY();
+    Result<int16_t, Status> readAccelY();
     /** @return Raw 16-bit accelerometer Z reading (and updates getAccelZ()). */
-    Result<int16_t, bool> readAccelZ();
+    Result<int16_t, Status> readAccelZ();
 
     /** @return Raw 16-bit temperature reading (and updates getTemp()). */
-    Result<int16_t, bool> readTemp();
+    Result<int16_t, Status> readTemp();
 
     // -------------------------------------------------------------------------
     // Sensor reads — burst (all axes in one I2C transaction)
@@ -285,14 +286,14 @@ public:
      *
      * Expected value: MPU6500_WHO_AM_I_VAL (0x70).
      *
-     * @return Result carrying the register contents and a success status.
+     * @return Result carrying the register contents and a Status.
      */
-    Result<uint8_t, bool> whoAmI();
+    Result<uint8_t, Status> whoAmI();
 
 private:
     
     // I2C information
-    II2C&   bus;
+    ArduinoI2C& bus;
     uint8_t address;
 
     // Scaled outputs
@@ -309,10 +310,10 @@ private:
     /**
      * @brief Read two consecutive big-endian bytes from @p reg, scale, and store.
      *
-     * @return Result carrying the raw value and a success status. On failure
+     * @return Result carrying the raw value and a Status. On failure
      *         the stored scaled value is left unchanged.
      */
-    Result<int16_t, bool> readSensor(uint8_t reg, float& scaledOut, SensorChannel channel);
+    Result<int16_t, Status> readSensor(uint8_t reg, float& scaledOut, SensorChannel channel);
 
     /**
      * @brief Assemble a big-endian int16 from two raw bytes.

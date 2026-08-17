@@ -4,13 +4,12 @@
 
 This repository contains reusable embedded libraries for:
 
-* Communication protocols (I2C, SPI, UART, CAN, etc.)
+* Arduino HAL helpers (I2C, UART/serial, timing)
 * Sensor drivers
 * Integrated circuit (IC) drivers
 * Utility libraries
-* Platform abstractions
 
-The goal is to create modular, composable libraries that are portable across embedded platforms and can be reused in multiple projects.
+The goal is to create modular, composable libraries that can be reused across Arduino-framework PlatformIO projects.
 
 ---
 
@@ -52,14 +51,14 @@ Application
       ↓
 Sensor Driver
       ↓
-Communication Interface
+Arduino HAL (I2C / Serial / Clock)
       ↓
-HAL / Platform
+Arduino framework
 ```
 
 A communication library should never know which sensor is using it.
 
-A sensor library should never know which MCU it is running on.
+A sensor library should talk to HAL helpers (`ArduinoI2C`, `ArduinoSerial`, `ArduinoClock`) rather than MCU peripherals or Arduino globals directly.
 
 ---
 
@@ -67,19 +66,19 @@ A sensor library should never know which MCU it is running on.
 
 Dependencies should be supplied from the outside whenever practical.
 
-For example, a sensor driver should receive an I2C interface rather than instantiate one itself.
+For example, a sensor driver should receive an `ArduinoI2C` instance rather than instantiate one itself.
 
 Avoid global objects and hidden dependencies.
 
 ---
 
-## Hardware Independence
+## Hardware Access
 
 Device drivers should not directly access MCU peripherals.
 
-Instead, communicate through abstract interfaces that can be implemented for different platforms.
+Instead, communicate through the Arduino HAL helpers in `hal/` (`ArduinoI2C`, `ArduinoSerial`, `ArduinoClock`).
 
-Drivers should be portable across STM32, ESP32, RP2040, Linux, desktop simulators, and future targets.
+HAL libraries target the Arduino framework (ESP32, STM32, AVR, and other Arduino-framework boards). Do not introduce platform-agnostic virtual interfaces unless there is a concrete need.
 
 ---
 
@@ -155,7 +154,6 @@ Where practical:
 
 * isolate hardware-independent logic for unit testing
 * separate protocol parsing from hardware communication
-* make components testable through mock interfaces
 
 Design for testability from the beginning.
 
@@ -185,7 +183,7 @@ When creating a new library:
 2. Minimize dependencies.
 3. Reuse existing abstractions instead of duplicating functionality.
 4. Design the public API before implementing internals.
-5. Consider portability from the outset.
+5. Target the Arduino framework unless there is a reason not to.
 
 ---
 
@@ -194,7 +192,6 @@ When creating a new library:
 When faced with multiple valid designs, prefer the one that:
 
 1. reduces coupling,
-2. improves portability,
-3. keeps APIs smaller,
-4. is easier to test,
-5. is easier to understand six months from now.
+2. keeps APIs smaller,
+3. is easier to test,
+4. is easier to understand six months from now.

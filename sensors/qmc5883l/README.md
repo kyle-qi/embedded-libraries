@@ -14,17 +14,20 @@ normalized / Gauss readings with a compass azimuth helper.
 
 ## Dependencies
 
-- [`i2c_handler`](../i2c_handler) — provides `II2C` interface and `ArduinoI2C` implementation.
+- [`i2c_handler`](../../hal/i2c) — provides `ArduinoI2C`.
+- [`clock`](../../hal/clock) — provides `ArduinoClock`.
 
 ## Usage Example
 
 ```cpp
 #include <Arduino.h>
-#include "arduino_i2c.h"
+#include "i2c.h"
+#include "clock.h"
 #include "qmc5883l.h"
 
-ArduinoI2C bus;
-QMC5883L mag(bus);
+ArduinoI2C   bus;
+ArduinoClock clk;
+QMC5883L     mag(bus, clk);
 
 void setup() {
     Serial.begin(115200);
@@ -48,6 +51,4 @@ void loop() {
 
 ## Supported Platforms
 
-Any platform with an `II2C`-compatible implementation. The `ArduinoI2C`
-implementation supports ESP32, STM32, Arduino AVR, and any other
-Arduino-framework target with `Wire`.
+ESP32, STM32, Arduino AVR, and any other Arduino-framework target with `Wire`.

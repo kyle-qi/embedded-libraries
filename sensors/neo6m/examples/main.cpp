@@ -1,6 +1,6 @@
 // Basic Neo6M example: read GPGGA sentences and print latitude / longitude.
 #include <Arduino.h>
-#include "serial_arduino.h"
+#include "serial.h"
 #include "neo6m.h"
 
 // Debug output port

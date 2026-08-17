@@ -3,6 +3,7 @@
 #include "qmc5883l_defs.h"
 #include "i2c.h"
 #include "clock.h"
+#include "result.h"
 
 class QMC5883L{
     public:
@@ -10,11 +11,11 @@ class QMC5883L{
     /**
      * @brief Class constructor.
      *
-     * @param bus       Reference to the platform I2C implementation.
-     * @param clock     Reference to the platform clock implementation.
+     * @param bus       Reference to the I2C bus.
+     * @param clock     Reference to the clock used for mode-switch delays.
      * @param myAddress The I2C address of the device (default @ref QMC5883L_I2C_ADDR_PIN_LOW).
      */
-    explicit QMC5883L(II2C& bus, IClock& clock, uint8_t myAddress = QMC5883L_I2C_ADDR_PIN_LOW);
+    explicit QMC5883L(ArduinoI2C& bus, ArduinoClock& clock, uint8_t myAddress = QMC5883L_I2C_ADDR_PIN_LOW);
 
     /**
      * @brief Operating mode of the magnetometer.
@@ -142,25 +143,28 @@ class QMC5883L{
 
     /** 
      * @brief Tells you if the magnetometer has data ready.
-     * 
-     * @return true if the magnetometer has new data ready, false otherwise.
+     *
+     * @return Result where `value` is the DRDY flag and `status` indicates
+     *         whether the I2C read itself succeeded. Check `!r` for bus
+     *         errors before using `r.value`.
      */
-    bool isDRDY();
+    Result<bool, Status> isDRDY();
 
     /**
      * @brief Indicates if the reading exceeds -30,000 to 30,000 LSBs. Register resets when read.
-     * 
-     * @return true if an output exceeds the range, false otherwise.
+     *
+     * @return Result where `value` is the overflow flag and `status`
+     *         indicates whether the I2C read succeeded.
      */
-    bool isOVFL();
+    Result<bool, Status> isOVFL();
 
     /**
      * @brief Reads all three magnetometer axes and updates internal state.
      *
-     * @return true if the I2C read succeeded for all axes, false otherwise.
+     * @return Status::Ok if all three I2C reads succeeded, Status::Error otherwise.
      *         On failure the previously stored values are unchanged.
      */
-    bool read();
+    Status read();
 
     /**
      * @brief Obtains the most recent magnetometer normalized x reading.
@@ -251,15 +255,15 @@ class QMC5883L{
 
     private:
 
-    /** 
-     * @brief Reference to the platform I2C implementation.
+    /**
+     * @brief Reference to the I2C bus.
      */
-    II2C& bus;
+    ArduinoI2C& bus;
 
     /**
-     * @brief Reference to the platform clock implementation.
+     * @brief Reference to the clock used for mode-switch delays.
      */
-    IClock& clock;
+    ArduinoClock& clock;
 
     /** 
      * @brief I2C address of the device.
@@ -300,7 +304,7 @@ class QMC5883L{
      * @param gaussStorage Where to store the Gauss reading.
      * @param maxVal       Calibration maximum for this axis.
      * @param minVal       Calibration minimum for this axis.
-     * @return true if the I2C read succeeded, false otherwise.
+     * @return Status::Ok if the I2C read succeeded, Status::Error otherwise.
      */
-    bool readAxis(uint8_t reg, float& normStorage, float& gaussStorage, int16_t maxVal, int16_t minVal);
+    Status readAxis(uint8_t reg, float& normStorage, float& gaussStorage, int16_t maxVal, int16_t minVal);
 

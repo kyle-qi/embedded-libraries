@@ -1,7 +1,7 @@
 // Basic ArduinoClock example: demonstrates blocking delay and non-blocking
 // elapsed timing.
 #include <Arduino.h>
-#include "clock_arduino.h"
+#include "clock.h"
 
 ArduinoClock clk;
 

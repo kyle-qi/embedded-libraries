@@ -1,13 +1,11 @@
 {
     "name": "clock",
     "version": "1.0.0",
-    "description": "Platform-agnostic clock abstraction (IClock) with an Arduino-backed implementation (ArduinoClock) for timing and delay services",
+    "description": "Arduino-backed timing and delay helper wrapping millis(), micros(), delay(), and delayMicroseconds()",
     "keywords": [
         "clock",
         "timing",
-        "delay",
-        "hal",
-        "abstraction"
+        "delay"
     ],
     "frameworks": [
         "arduino"
