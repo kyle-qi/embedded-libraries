@@ -15,10 +15,5 @@
     ],
     "platforms": [
         "*"
-    ],
-    "dependencies": [
-        {
-            "name": "serial"
-        }
     ]
 }

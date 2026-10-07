@@ -2,14 +2,20 @@
 
 ## Purpose
 
-This repository contains reusable embedded libraries for:
+This repository is a monorepo for embedded projects.
+
+`libs/` contains reusable embedded libraries for:
 
 * Arduino HAL helpers (I2C, UART/serial, timing)
 * Sensor drivers
 * Integrated circuit (IC) drivers
 * Utility libraries
 
+`apps/` contains PlatformIO applications built on those libraries, one project per folder.
+
 The goal is to create modular, composable libraries that can be reused across Arduino-framework PlatformIO projects.
+
+Libraries must never depend on anything in `apps/`. Apps link the libraries they use with `symlink://` entries in `lib_deps`.
 
 ---
 
@@ -76,7 +82,7 @@ Avoid global objects and hidden dependencies.
 
 Device drivers should not directly access MCU peripherals.
 
-Instead, communicate through the Arduino HAL helpers in `hal/` (`ArduinoI2C`, `ArduinoSerial`, `ArduinoClock`).
+Instead, communicate through the Arduino HAL helpers in `libs/hal/` (`ArduinoI2C`, `ArduinoSerial`, `ArduinoClock`).
 
 HAL libraries target the Arduino framework (ESP32, STM32, AVR, and other Arduino-framework boards). Do not introduce platform-agnostic virtual interfaces unless there is a concrete need.
 

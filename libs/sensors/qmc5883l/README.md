@@ -4,7 +4,7 @@
 
 Driver for the QMC5883L 3-axis magnetometer. Provides register-level
 configuration, soft-iron calibration via min/max collection, and raw /
-normalized / Gauss readings with a compass azimuth helper.
+normalized / Gauss readings.
 
 ## Hardware
 

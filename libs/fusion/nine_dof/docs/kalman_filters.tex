@@ -1,0 +1,97 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{parskip}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    breakatwhitespace=false,
+    frame=single,
+    columns=fullflexible,
+    keepspaces=true,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=8pt,
+    xleftmargin=2.5em,
+    framexleftmargin=2.5em,
+}
+
+\title{NineDOF: An Absolute Orientation Sensor Fusion Algorithm (For Dummies?)}
+\author{Kyle Qi}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+This document accompanies the NineDOF PlatformIO based C++ library, a library used to calculate the absolute orientation of a device. The purpose of this document is the explain how the algorithm is designed from the ground up. No prior knowledge of controls, robotics, or sensor fusion is required. However a foundation in calculus, linear algebra and geometry is assumed. This document is written as a book that can be read chronilogically, as opposed to a reference where a reader jumps to sections as necessary.
+
+The algorithm uses an Extended Kalman Filter (EKF) to fuse accelerometer, gyroscope, and magnetometer to produce an orientation of the device in the global frame. Each sensor contributes three degrees of freedom, hence the name NineDOF. The underlying library solely handles fusion and assumes that it is being fed non-garbage values from the sensors in use. Therefore, discussions around denoising sensor readings will remain limited in this document.
+
+\section{The Kalman Filter}
+
+Dynamical systems such as cars, robots and drones primarily have two sources of truth available to them to observe their phyiscal evolution over time: Their mathematical model comprised of physics equations, and sensors that measure their state empirically. Both methods have their own benefits and drawbacks: 
+
+\begin{itemize}
+    \item \textbf{Models} are explicit, robust to noise, and easy to simulate but can be inaccurate as they encode a lot of assumptions,typically ignoring or inaccurately capturing factors such as friction and drag. These non-modelled factors are called process noise.
+    \item \textbf{Sensors} give empirical readings of the state of a system, capturing non-modelled effects, but produce non-differentiable and noisy signals. Sources of variation
+    
+\end{itemize}
+
+
+
+Instead of using one approach to determine the state of a system, the Kalman Filter uses both the system model and the sensor readings to produce a more complete picture of the state of a system. Both models and sensor readings introduce uncertainty due to non-modelled effects and noise respectively, so the Kalman Filter uses both to optimally produce a more complete picture.
+
+The Kalman Filter is comprised of two stages: The Predict Stage, in which mathematical models are used to predict what the future state of the system will be, and then the update stage where sensor readings are used to "correct" the update stage. At each timestep, the Kalman Filter produces two pieces of information useful for the consumer: A current state estimate and an estimate uncertainty matrix. Additionally, it produces a future prediction state and prediction uncertainty matrix for the next time step of the algorithm. Since the Kalman Filter only requires the previous state for its current calculation, it makes it computationally cheap and lightweight. No additional prior time knowledge of the system is required.
+
+\subsection{The Predict Stage}
+
+
+
+\subsection{The Update Stage}
+
+\subsection{The Extended Kalman Filter}
+
+The Extended Kalman Filter extends the Kalman Filter to non-linear applcations by linearizing the system around the point of interest. 
+
+This is accomplished by
+
+\section{Sensors}
+
+\section{Accelerometer}
+
+\section{Gyroscope}
+
+\subsection{Gimbal Lock}
+
+\subsection{Quaternions}
+
+\subsection{Body vs Global Coordinate Frame}
+
+\subsection{Quaternions}
+
+\section{Magnetometer}
+
+\subsection{Hard and Soft Iron Offsets}
+
+\section{Notation}
+
+\section{References}
+
+TODO: To be formatted.
+
+This document was developed with the help of the resources listed below. Additionally, generative AI was used in the creation of this document, however its use is minimized as much as possible.
+
+https://kalmanfilter.net/
+
+\end{document}

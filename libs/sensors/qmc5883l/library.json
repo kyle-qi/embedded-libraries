@@ -13,13 +13,5 @@
     ],
     "platforms": [
         "*"
-    ],
-    "dependencies": [
-        {
-            "name": "i2c_handler"
-        },
-        {
-            "name": "clock"
-        }
     ]
 }
